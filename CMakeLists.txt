@@ -7,6 +7,9 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE INTERNAL "")
 
 project(unk_engine)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD 99)
+
 set(ASSETS_FOLDER ${CMAKE_SOURCE_DIR}/assets)
 
 if ((APPLE AND NOT CMAKE_SYSTEM_NAME MATCHES "Darwin") OR EMSCRIPTEN)
@@ -31,12 +34,19 @@ if(EMSCRIPTEN)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
 endif()
 
+if(ANDROID)
+    add_library(${PROJECT_NAME} SHARED ${SOURCES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC android log GLESv2 m)
+
+endif()
+
 if(MSVC)
     add_executable(${PROJECT_NAME} ${SOURCES})
+
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${ASSETS_FOLDER} ${OUTPUT_DIR}/assets
-    COMMENT "Copying assets to executable directory \n")
+    ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
+    
 endif()
 
 
@@ -55,6 +65,6 @@ if(EMSCRIPTEN)
 
 endif()
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+# target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3)

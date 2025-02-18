@@ -57,6 +57,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     SDL_ShowWindow(window);
     {
+        SDL_Log("Working flawlessly in %s", SDL_GetPlatform());
+
         int width, height, bbwidth, bbheight;
         SDL_GetWindowSize(window, &width, &height);
         SDL_GetWindowSizeInPixels(window, &bbwidth, &bbheight);
@@ -74,7 +76,6 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     SDL_SetRenderVSync(renderer, -1); // enable vysnc
 
-    SDL_Log("Application started successfully!");
 
     return SDL_APP_CONTINUE;
 }

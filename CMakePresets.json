@@ -13,7 +13,8 @@
         "generator": "Xcode",
         "binaryDir": "${sourceDir}/build/macos",
         "cacheVariables": {
-          "CMAKE_SYSTEM_NAME": "Darwin"
+          "CMAKE_SYSTEM_NAME": "Darwin",
+          "BUILD_SHARED_LIBS": "ON"
         }
       },
       {

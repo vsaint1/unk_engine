@@ -86,11 +86,17 @@ endif()
 
 # macosx
 if(APPLE AND BUILD_SHARED_LIBS)
+    message(STATUS "BUILD MACOS")
+    set(RESOURCES "${CMAKE_SOURCE_DIR}/assets")
 
-    add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES})
-    set_source_files_properties( ${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    set_source_files_properties("${CMAKE_SOURCE_DIR}/assets" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} )
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES 
+    MACOSX_BUNDLE TRUE
+    RESOURCE "${RESOURCES}")
     target_link_libraries(${PROJECT_NAME} PRIVATE objc stdc++)
+ 
+
 endif()
 
 

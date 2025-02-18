@@ -4,6 +4,7 @@
 // #include <SDL3_ttf/SDL_ttf.h>
 // #include <SDL3_mixer/SDL_mixer.h>
 // #include <SDL3_image/SDL_image.h>
+#include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_system.h>
 #include <cmath>
 #include <filesystem>
@@ -11,10 +12,12 @@
 #include <iostream>
 #include <string_view>
 
+
 #if __ANDROID__
-#define ASSETS_PATH std::string("")
+    std::filesystem::path basePath = "";   // on Android we do not want to use basepath. Instead, assets are available at the root directory.
 #else
-#define ASSETS_PATH std::string("assets/")
+   
+     const std::filesystem::path basePath = SDL_GetBasePath();
 #endif
 
 constexpr uint32_t windowStartWidth  = 400;
@@ -32,23 +35,19 @@ struct AppContext {
 
 
 std::string LoadFile(const std::string& filename) {
-    
-    SDL_RWops* file = SDL_RWFromFile((ASSETS_PATH + filename).c_str(), "r");
 
-    if (!file) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to open file: %s", SDL_GetError());
+    size_t filesize = 0;
+    const auto filePath = basePath / filename;
+
+    void* data      = SDL_LoadFile(filePath.string().c_str(), &filesize);
+
+    if (!data) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load file '%s': %s \n", filename.c_str(), SDL_GetError());
         return "";
     }
 
-    Sint64 size = SDL_RWsize(file);
-    if (size <= 0) {
-        SDL_RWclose(file);
-        return "";
-    }
-
-    std::string content(size, '\0');
-    SDL_RWread(file, &content[0], size, 1);
-    SDL_RWclose(file);
+    std::string content(static_cast<char*>(data), filesize);
+    SDL_free(data);
 
     return content;
 }
@@ -75,10 +74,11 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         return SDL_Fail();
     }
 
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "path %s", SDL_GetBasePath());
 
-    auto file = LoadFile("test.txt");
+    auto file = LoadFile("assets/test.txt");
 
-    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Content %s, %s", file.c_str(),
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Content %s, %s \n", file.c_str(),
                    ASSETS_PATH.c_str());
 
     SDL_ShowWindow(window);

@@ -46,7 +46,7 @@ if(MSVC)
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
-    
+
 endif()
 
 
@@ -66,5 +66,5 @@ if(EMSCRIPTEN)
 endif()
 
 # target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/src/public)
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3)

@@ -4,9 +4,18 @@
 // #include <SDL3_ttf/SDL_ttf.h>
 // #include <SDL3_mixer/SDL_mixer.h>
 // #include <SDL3_image/SDL_image.h>
+#include <SDL3/SDL_system.h>
 #include <cmath>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <string_view>
+
+#if __ANDROID__
+#define ASSETS_PATH std::string("")
+#else
+#define ASSETS_PATH std::string("assets/")
+#endif
 
 constexpr uint32_t windowStartWidth  = 400;
 constexpr uint32_t windowStartHeight = 400;
@@ -20,6 +29,29 @@ struct AppContext {
     // Mix_Music* music;
     SDL_AppResult app_quit = SDL_APP_CONTINUE;
 };
+
+
+std::string LoadFile(const std::string& filename) {
+    
+    SDL_RWops* file = SDL_RWFromFile((ASSETS_PATH + filename).c_str(), "r");
+
+    if (!file) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to open file: %s", SDL_GetError());
+        return "";
+    }
+
+    Sint64 size = SDL_RWsize(file);
+    if (size <= 0) {
+        SDL_RWclose(file);
+        return "";
+    }
+
+    std::string content(size, '\0');
+    SDL_RWread(file, &content[0], size, 1);
+    SDL_RWclose(file);
+
+    return content;
+}
 
 SDL_AppResult SDL_Fail() {
     SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "Error %s", SDL_GetError());
@@ -43,16 +75,11 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         return SDL_Fail();
     }
 
-#if __ANDROID__
-    std::filesystem::path basePath = "";
-#else
-    auto basePathPtr = SDL_GetBasePath();
-    if (not basePathPtr) {
-        return SDL_Fail();
-    }
-    const std::filesystem::path basePath = basePathPtr;
-#endif
 
+    auto file = LoadFile("test.txt");
+
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Content %s, %s", file.c_str(),
+                   ASSETS_PATH.c_str());
 
     SDL_ShowWindow(window);
     {

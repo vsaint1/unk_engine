@@ -1,4 +1,60 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.22)
 
-project(unk_engine VERSION 1.0.0 LANGUAGES CXX)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE INTERNAL "")
+
+project(unk_engine)
+
+set(ASSETS_FOLDER ${CMAKE_SOURCE_DIR}/assets)
+
+if ((APPLE AND NOT CMAKE_SYSTEM_NAME MATCHES "Darwin") OR EMSCRIPTEN)
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")    # Disable shared builds on platforms where it does not make sense to use them
+    set(SDL_SHARED OFF)
+else()
+    set(SDL_SHARED ON)
+endif()
+
+if(MSVC)
+    if(NOT CMAKE_GENERATOR STREQUAL "Ninja")
+        add_definitions(/MP)				# parallelize each target, unless Ninja is the generator
+    endif()
+endif()
+
+
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+
+add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+
+if(EMSCRIPTEN)
+	set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
+endif()
+
+if(MSVC)
+    add_executable(${PROJECT_NAME} ${SOURCES})
+    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${ASSETS_FOLDER} ${OUTPUT_DIR}/assets
+    COMMENT "Copying assets to executable directory \n")
+endif()
+
+
+
+if(EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    add_executable(${PROJECT_NAME} ${SOURCES})
+
+    # preload assets and mount then in assets/
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/assets@/assets")
+
+    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
+
+
+endif()
+
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3)

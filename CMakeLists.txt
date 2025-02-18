@@ -12,6 +12,7 @@ set(CMAKE_C_STANDARD 99)
 
 set(ASSETS_FOLDER ${CMAKE_SOURCE_DIR}/assets)
 
+# ios and web
 if ((APPLE AND NOT CMAKE_SYSTEM_NAME MATCHES "Darwin") OR EMSCRIPTEN)
     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")    # Disable shared builds on platforms where it does not make sense to use them
     set(SDL_SHARED OFF)
@@ -39,6 +40,16 @@ if(ANDROID)
     target_link_libraries(${PROJECT_NAME} PUBLIC android log GLESv2 m)
 
 endif()
+
+# macosx
+if(APPLE)
+
+add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES})
+set_source_files_properties( ${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+set_source_files_properties("${CMAKE_SOURCE_DIR}/assets" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+target_link_libraries(${PROJECT_NAME} PRIVATE objc stdc++)
+endif()
+
 
 if(MSVC)
     add_executable(${PROJECT_NAME} ${SOURCES})

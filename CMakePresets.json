@@ -7,6 +7,16 @@
     },
     "configurePresets": [
       {
+        "name":"mac-xcode",
+        "displayName": "macOS",
+        "description": "macOS build with xcode",
+        "generator": "Xcode",
+        "binaryDir": "${sourceDir}/build/macos",
+        "cacheVariables": {
+          "CMAKE_SYSTEM_NAME": "Darwin"
+        }
+      },
+      {
         "name":"ios-xcode",
         "displayName": "iOS",
         "description": "iOS build with xcode",
@@ -43,6 +53,14 @@
       }
     ],
     "buildPresets": [
+      {
+        "name": "mac-xcode",
+        "displayName": "macOS",
+        "description": "macOS build with xcode",
+        "targets": ["unk_engine"],
+        "verbose": true,
+        "configurePreset": "mac-xcode"
+      },
       {
         "name": "ios-xcode",
         "displayName": "iOS",

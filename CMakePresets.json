@@ -23,7 +23,22 @@
         "generator": "Xcode",
         "binaryDir": "${sourceDir}/build/ios",
         "cacheVariables": {
-          "CMAKE_SYSTEM_NAME": "iOS"
+          "CMAKE_SYSTEM_NAME": "iOS",
+          "BUILD_SHARED_LIBS": "OFF"
+        }
+      },
+
+      {
+        "name": "ios-simulator-xcode",
+        "displayName": "iOS Simulator",
+        "description": "iOS build for Simulator with Xcode",
+        "generator": "Xcode",
+        "binaryDir": "${sourceDir}/build/ios-simulator",
+        "cacheVariables": {
+          "CMAKE_SYSTEM_NAME": "iOS",
+          "CMAKE_OSX_ARCHITECTURES": "x86_64;arm64",
+          "BUILD_SHARED_LIBS": "OFF",
+          "CMAKE_OSX_SYSROOT": "iphonesimulator"
         }
       },
       {

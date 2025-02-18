@@ -41,13 +41,56 @@ if(ANDROID)
 
 endif()
 
-# macosx
-if(APPLE)
+# ios
+if(APPLE AND NOT BUILD_SHARED_LIBS)
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES})
+    find_library(IO_LIB ImageIO REQUIRED)
+    find_library(CS_LIB CoreServices REQUIRED)
+    find_library(CT_LIB CoreText REQUIRED)
+    find_library(CG_LIB CoreGraphics REQUIRED)
+    find_library(CF_LIB CoreFoundation REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CF_LIB} ${CT_LIB} ${IO_LIB} ${CS_LIB} ${CG_LIB})
 
-add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES})
-set_source_files_properties( ${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-set_source_files_properties("${CMAKE_SOURCE_DIR}/assets" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-target_link_libraries(${PROJECT_NAME} PRIVATE objc stdc++)
+    set(LAUNCH_SCREEN "${CMAKE_SOURCE_DIR}/templates/ios/LaunchScreen.storyboard")
+    set(ICON_NAME "SAppLogo.icns")
+    set(ICON_PATH "${CMAKE_SOURCE_DIR}/templates/ios/${ICON_NAME}")
+    set(RESOURCES ${LAUNCH_SCREEN} "${CMAKE_SOURCE_DIR}/assets")
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES 
+    MACOSX_BUNDLE TRUE
+    RESOURCE "${RESOURCES}"
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/templates/ios/Info.plist.in"
+    XCODE_IPHONEOS_DEPLOYMENT_TARGET 12.0
+    XCODE_GENERATE_SCHEME TRUE
+    XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES YES
+    XCODE_ATTRIBUTE_CODE_SIGN_STYLE “Automatic”
+    XCODE_ATTRIBUTE_BUNDLE_IDENTIFIER "com.unkengine.app.project"
+	XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.unkengine.app.project"
+	XCODE_ATTRIBUTE_CURRENTYEAR "${CURRENTYEAR}")
+
+    if(CMAKE_OSX_SYSROOT MATCHES "iphonesimulator")
+        message(STATUS "SIMULATOR BUILD")
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO"
+            XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "iphonesimulator"
+            XCODE_ATTRIBUTE_ARCHS "x86_64 arm64")
+    else()
+        message(STATUS "REAL DEVICE BUILD")
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO"
+            XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "iphoneos"
+            XCODE_ATTRIBUTE_ARCHS "arm64")
+    endif()
+
+endif()
+
+# macosx
+if(APPLE AND BUILD_SHARED_LIBS)
+
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES})
+    set_source_files_properties( ${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    set_source_files_properties("${CMAKE_SOURCE_DIR}/assets" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    target_link_libraries(${PROJECT_NAME} PRIVATE objc stdc++)
 endif()
 
 
@@ -79,3 +122,5 @@ endif()
 # target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/src/public)
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3)
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)

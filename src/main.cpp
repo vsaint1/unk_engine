@@ -1,30 +1,5 @@
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_iostream.h>
-#include <SDL3/SDL_main.h>
-#include <SDL3/SDL_system.h>
-#include <SDL3_image/SDL_image.h>
-#include <SDL3_mixer/SDL_mixer.h>
-#include <SDL3_ttf/SDL_ttf.h>
-#include <cmath>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <string_view>
-#include <glm/vec3.hpp>
-
-
-#if __ANDROID__
-const std::filesystem::path BASE_PATH = "";
-#define ASSETS_PATH std::string("")
-#elif __APPLE__
-const std::filesystem::path BASE_PATH = SDL_GetBasePath();
-#define ASSETS_PATH (BASE_PATH / "assets/").string()
-#else
-const std::filesystem::path BASE_PATH = SDL_GetBasePath();
-#define ASSETS_PATH std::string("assets/")
-#endif
-
+#include "public/core/Engine.h"
+#include <SDL3/SDL_main.h> /* WARNING: This must be included only once! */
 
 struct AppContext {
     SDL_Window* window;
@@ -64,23 +39,18 @@ SDL_AppResult SDL_Fail() {
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        return SDL_Fail();
-    }
 
+
+    /* This will fail and not continue if SDL_Init/CreateWindow fails */
+    GEngine->Initialize("[UNK_ENGINE] - Window", {800, 600},
+                        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL);
 
     if (!TTF_Init()) {
         return SDL_Fail();
     }
 
 
-    SDL_Window* window = SDL_CreateWindow("[UNK_ENGINE] - Window", 800, 600,
-                                          SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL);
-    if (!window) {
-        return SDL_Fail();
-    }
-
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+    SDL_Renderer* renderer = SDL_CreateRenderer(GEngine->GetWindow(), NULL);
 
     if (!renderer) {
         return SDL_Fail();
@@ -133,17 +103,17 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     SDL_DestroySurface(imgSurface);
 
     auto gpuDriver = SDL_GetGPUDriver(0);
-    SDL_ShowWindow(window);
+    SDL_ShowWindow(GEngine->GetWindow());
     {
         SDL_Log("Working flawlessly in %s \n", SDL_GetPlatform());
-        SDL_Log("Version %d \n",SDL_GetVersion());
+        SDL_Log("Version %d \n", SDL_GetVersion());
         SDL_Log("Video %s \n", SDL_GetVideoDriver(0));
         SDL_Log("GPU driver %s \n", SDL_GetGPUDriver(0));
         SDL_Log("RAM available %d \n", SDL_GetSystemRAM());
 
         int width, height, bbwidth, bbheight;
-        SDL_GetWindowSize(window, &width, &height);
-        SDL_GetWindowSizeInPixels(window, &bbwidth, &bbheight);
+        SDL_GetWindowSize(GEngine->GetWindow(), &width, &height);
+        SDL_GetWindowSizeInPixels(GEngine->GetWindow(), &bbwidth, &bbheight);
         SDL_Log("Window size: %ix%i \n", width, height);
         SDL_Log("Backbuffer size: %ix%i \n", bbwidth, bbheight);
         if (width != bbwidth) {
@@ -154,9 +124,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     SDL_FRect messageRect = {10, 100, messageTex->w, messageTex->h};
 
-    SDL_FRect imageRect = {50,200, 256, 256};
+    SDL_FRect imageRect = {50, 200, 256, 256};
 
-    *appstate = new AppContext{.window      = window,
+    *appstate = new AppContext{.window      = GEngine->GetWindow(),
                                .renderer    = renderer,
                                .messageTex  = messageTex,
                                .imageTex    = imageTex,
@@ -183,19 +153,19 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* app = (AppContext*) appstate;
 
-    auto deltaTime = SDL_GetTicks() / 1000.f;
+    auto deltaTime       = SDL_GetTicks() / 1000.f;
     const auto FREQUENCY = 10;
-    float lerpFactor = (std::sin(deltaTime * FREQUENCY) + 1) / 2.0;
+    float lerpFactor     = (std::sin(deltaTime * FREQUENCY) + 1) / 2.0;
 
     auto red   = 200 * (1 - lerpFactor) + 255 * lerpFactor;
     auto green = 0 * (1 - lerpFactor) + 255 * lerpFactor;
     auto blue  = 0 * (1 - lerpFactor) + 255 * lerpFactor;
 
-    SDL_SetRenderDrawColor(app->renderer, 0,0,0, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(app->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 
     SDL_RenderClear(app->renderer);
 
-    SDL_SetTextureColorMod(app->imageTex,red,green,blue); // just a small example of color modulation
+    SDL_SetTextureColorMod(app->imageTex, red, green, blue); // just a small example of color modulation
     SDL_RenderTexture(app->renderer, app->imageTex, NULL, &app->imageDest);
 
     SDL_RenderTexture(app->renderer, app->messageTex, NULL, &app->messageDest);

@@ -47,7 +47,7 @@
         "displayName": "WebGL",
         "description": "WebGL build with emscripten",
         "binaryDir": "${sourceDir}/build/webgl",
-        "generator": "Ninja",
+        "generator": "MingW Makefiles",
         "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "cacheVariables": {
           "CMAKE_SYSTEM_NAME": "Emscripten",

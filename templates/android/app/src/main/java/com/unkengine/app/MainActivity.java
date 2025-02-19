@@ -12,6 +12,9 @@ public class MainActivity extends SDLActivity {
 
         return new String[]{
                 "SDL3",
+                "SDL3_ttf",
+                "SDL3_mixer",
+//                "SDL3_image",
                 "unk_engine"
         };
     }

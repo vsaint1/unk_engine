@@ -31,15 +31,32 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
 
+set(SDLTTF_VENDORED ON) # build own deps.
+add_subdirectory(vendor/SDL_ttf EXCLUDE_FROM_ALL)
+
+set(SDLMIXER_VENDORED ON) # build own deps.
+set(SDLMIXER_MIDI_NATIVE OFF)  # disabled
+set(SDLMIXER_GME OFF)
+set(SDLMIXER_WAVPACK OFF)     
+set(SDLMIXER_MOD OFF)
+set(SDLMIXER_OPUS OFF)
+set(SDLMIXER_MP3 ON)
+set(SDLMIXER_FLAC ON)
+add_subdirectory(vendor/SDL_mixer EXCLUDE_FROM_ALL)
+
+
 if(EMSCRIPTEN)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
 endif()
 
 if(ANDROID)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
     add_library(${PROJECT_NAME} SHARED ${SOURCES})
     target_link_libraries(${PROJECT_NAME} PUBLIC android log GLESv2 m)
 
 endif()
+
+
 
 # ios
 if(APPLE AND NOT BUILD_SHARED_LIBS)
@@ -49,7 +66,9 @@ if(APPLE AND NOT BUILD_SHARED_LIBS)
     find_library(CT_LIB CoreText REQUIRED)
     find_library(CG_LIB CoreGraphics REQUIRED)
     find_library(CF_LIB CoreFoundation REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CF_LIB} ${CT_LIB} ${IO_LIB} ${CS_LIB} ${CG_LIB})
+    find_library(OPENGLES OpenGLES REQUIRED)
+    find_library(UIKIT UIKit)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CF_LIB} ${CT_LIB} ${IO_LIB} ${CS_LIB} ${CG_LIB} ${OPENGLES} ${UIKIT})
 
     set(LAUNCH_SCREEN "${CMAKE_SOURCE_DIR}/templates/ios/LaunchScreen.storyboard")
     set(ICON_NAME "SAppLogo.icns")
@@ -115,7 +134,7 @@ if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     add_executable(${PROJECT_NAME} ${SOURCES})
 
-    # preload assets and mount then in assets/
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/assets@/assets")
 
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
@@ -127,6 +146,6 @@ endif()
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/src/public)
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3)
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)

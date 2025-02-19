@@ -1,8 +1,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_ttf/SDL_ttf.h>
 // #include <SDL3_ttf/SDL_ttf.h>
-// #include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_mixer/SDL_mixer.h>
 // #include <SDL3_image/SDL_image.h>
 #include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_system.h>
@@ -14,14 +15,13 @@
 
 
 #if __ANDROID__
-    std::filesystem::path basePath = "";   // on Android we do not want to use basepath. Instead, assets are available at the root directory.
+const std::filesystem::path BASE_PATH = "";
+#define ASSETS_PATH std::string("")
 #else
-   
-     const std::filesystem::path basePath = SDL_GetBasePath();
+const std::filesystem::path BASE_PATH = SDL_GetBasePath();
+#define ASSETS_PATH std::string("assets/")
 #endif
 
-constexpr uint32_t windowStartWidth  = 400;
-constexpr uint32_t windowStartHeight = 400;
 
 struct AppContext {
     SDL_Window* window;
@@ -36,10 +36,11 @@ struct AppContext {
 
 std::string LoadFile(const std::string& filename) {
 
-    size_t filesize = 0;
-    const auto filePath = basePath / filename;
+    size_t filesize     = 0;
+    const auto filePath = ASSETS_PATH.append(filename);
 
-    void* data      = SDL_LoadFile(filePath.string().c_str(), &filesize);
+
+    void* data = SDL_LoadFile(filePath.c_str(), &filesize);
 
     if (!data) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load file '%s': %s \n", filename.c_str(), SDL_GetError());
@@ -53,7 +54,7 @@ std::string LoadFile(const std::string& filename) {
 }
 
 SDL_AppResult SDL_Fail() {
-    SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "Error %s", SDL_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "Error %s \n", SDL_GetError());
     return SDL_APP_FAILURE;
 }
 
@@ -63,42 +64,78 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     }
 
 
-    SDL_Window* window = SDL_CreateWindow("SDL3 hello", windowStartWidth, windowStartHeight,
-                                          SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+    if (!TTF_Init()) {
+        return SDL_Fail();
+    }
+
+
+    SDL_Window* window = SDL_CreateWindow("[UNK_ENGINE] - Window", 800, 600,
+                                          SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL);
     if (!window) {
         return SDL_Fail();
     }
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+
     if (!renderer) {
         return SDL_Fail();
     }
 
-    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "path %s", SDL_GetBasePath());
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "path %s \n", SDL_GetBasePath());
 
-    auto file = LoadFile("assets/test.txt");
+    auto textFile = LoadFile("test.txt");
 
-    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Content %s, %s \n", file.c_str(),
-                   ASSETS_PATH.c_str());
+    TTF_Font* mineFont = TTF_OpenFont(ASSETS_PATH.append("fonts/Minecraft.ttf").c_str(), 32);
+
+    if (!mineFont) {
+        return SDL_Fail();
+    }
+
+    auto aduioDevice = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, 0);
+    if (!aduioDevice) {
+        return SDL_Fail();
+    }
+
+    if (!Mix_OpenAudio(aduioDevice, 0)) {
+        return SDL_Fail();
+    }
+
+    auto music = Mix_LoadMUS(ASSETS_PATH.append("sounds/lullaby.mp3").c_str());
+
+    if (!music) {
+        return SDL_Fail();
+    }
+
+    Mix_PlayMusic(music, 0); // once
+
+    SDL_Surface* surfaceMessage = TTF_RenderText_Solid(mineFont, textFile.data(), textFile.length(), {255, 255, 255});
+
+    SDL_Texture* messageTex = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Content %s\n", textFile.c_str());
+
+    TTF_CloseFont(mineFont);
+    SDL_DestroySurface(surfaceMessage);
 
     SDL_ShowWindow(window);
     {
-        SDL_Log("Working flawlessly in %s", SDL_GetPlatform());
+        SDL_Log("Working flawlessly in %s \n", SDL_GetPlatform());
 
         int width, height, bbwidth, bbheight;
         SDL_GetWindowSize(window, &width, &height);
         SDL_GetWindowSizeInPixels(window, &bbwidth, &bbheight);
-        SDL_Log("Window size: %ix%i", width, height);
-        SDL_Log("Backbuffer size: %ix%i", bbwidth, bbheight);
+        SDL_Log("Window size: %ix%i \n", width, height);
+        SDL_Log("Backbuffer size: %ix%i \n", bbwidth, bbheight);
         if (width != bbwidth) {
-            SDL_Log("This is a highdpi environment.");
+            SDL_Log("This is a highdpi environment. \n");
         }
     }
+    SDL_FRect messageRect = {10, 100, messageTex->w, messageTex->h};
 
-    *appstate = new AppContext{
-        .window   = window,
-        .renderer = renderer,
-    };
+    *appstate =
+        new AppContext{.window = window, .renderer = renderer, .messageTex = messageTex, .messageDest = messageRect
+
+        };
 
     SDL_SetRenderVSync(renderer, -1); // enable vysnc
 
@@ -127,6 +164,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     SDL_SetRenderDrawColor(app->renderer, red, green, blue, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(app->renderer);
 
+
+    SDL_RenderTexture(app->renderer, app->messageTex, NULL, &app->messageDest);
 
     SDL_RenderPresent(app->renderer);
 

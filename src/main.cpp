@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <string_view>
+#include <glm/vec3.hpp>
 
 
 #if __ANDROID__
@@ -107,6 +108,10 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         return SDL_Fail();
     }
 
+    auto vec = glm::vec3(1, 1, 1);
+
+    SDL_Log("glm_vec %f %f %f \n", vec.x, vec.y, vec.z);
+
     Mix_PlayMusic(music, 0); // once
 
     SDL_Surface* imgSurface = IMG_Load(ASSETS_PATH.append("images/dragon.png").c_str());
@@ -124,9 +129,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     SDL_DestroySurface(surfaceMessage);
     SDL_DestroySurface(imgSurface);
 
+    auto gpuDriver = SDL_GetGPUDriver(0);
     SDL_ShowWindow(window);
     {
         SDL_Log("Working flawlessly in %s \n", SDL_GetPlatform());
+        SDL_Log("Version %d \n",SDL_GetVersion());
+        SDL_Log("Video %s \n", SDL_GetVideoDriver(0));
+        SDL_Log("GPU driver %s \n", SDL_GetGPUDriver(0));
+        SDL_Log("RAM available %d \n", SDL_GetSystemRAM());
 
         int width, height, bbwidth, bbheight;
         SDL_GetWindowSize(window, &width, &height);

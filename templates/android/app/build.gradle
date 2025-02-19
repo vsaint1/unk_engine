@@ -36,7 +36,6 @@ android {
             debuggable true
             externalNativeBuild {
                cmake {
-                   abiFilters 'x86' // EMULATOR
 
                }
             }

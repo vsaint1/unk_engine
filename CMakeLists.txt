@@ -54,7 +54,14 @@ set(SDLIMAGE_GIF ON)
 set(SDLIMAGE_SVG ON)
 add_subdirectory(vendor/SDL_image EXCLUDE_FROM_ALL)
 
-
+set(GLM_BUILD_LIBRARY OFF CACHE BOOL "" FORCE)
+set(GLM_BUILD_TESTS OFF)
+set(GLM_BUILD_TESTS OFF)
+set(GLM_BUILD_TESTS OFF)
+set(GLM_BUILD_TESTS OFF)
+set(GLM_ENABLE_CXX_20 ON)
+set(GLM_TEST_ENABLE OFF)
+add_subdirectory(vendor/glm)
 
 if(EMSCRIPTEN)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
@@ -157,6 +164,6 @@ endif()
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/src/public)
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer SDL3_image::SDL3_image)
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer SDL3_image::SDL3_image glm::glm) 
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)

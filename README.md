@@ -8,6 +8,17 @@ unk_engine is a `CMAKE` and `SDL3` project "framework" used to help create cross
 
 ## Development and build
 
+1. Clone the repository
+
+```sh
+git clone https://github.com/vsaint1/unk_engine.git
+git pull
+cd unk_engine
+git submodule update --init --recursive
+```
+
+2. Install requirements
+
 - All the `requirements` for each platform are listed below with minimal version (major, minor, patch).
 
 ### Windows

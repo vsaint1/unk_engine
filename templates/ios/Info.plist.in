@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>UILaunchStoryboardName</key>
-	<string>iosLaunchScreen.storyboard</string>
+	<string>LaunchScreen.storyboard</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIconFile</key>
@@ -27,19 +27,21 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © $(CURRENTYEAR) Ravbug. All rights reserved.</string>
+	<string>Copyright © $(CURRENTYEAR) unk_engine. All rights reserved.</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<true/>
 	<key>NSSupportsSuddenTermination</key>
 	<true/>
 	<key>CFBundleIconFile</key>
-	<string>logo.png</string>
+	<string>AppLogo.icns</string>
     <key>UIRequiresFullScreen</key>
     <true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
+	    <string>UIInterfaceOrientationPortrait</string>
+
+		<!-- <string>UIInterfaceOrientationLandscapeLeft</string> -->
+		<!-- <string>UIInterfaceOrientationLandscapeRight</string> -->
 	</array>
 </dict>
 </plist>

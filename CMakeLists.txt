@@ -75,10 +75,20 @@ if(ANDROID)
 endif()
 
 
+# ios/macosx
+if(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
+endif()
 
 # ios
 if(APPLE AND NOT BUILD_SHARED_LIBS)
-    add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES})
+    set(LAUNCH_SCREEN "${CMAKE_SOURCE_DIR}/templates/ios/LaunchScreen.storyboard")
+    set(ICON_NAME "SAppLogo.icns")
+    set(ICON_PATH "${CMAKE_SOURCE_DIR}/templates/ios/${ICON_NAME}")
+    set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/assets")
+
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${LAUNCH_SCREEN} ${ASSETS_PATH})
+
     find_library(IO_LIB ImageIO REQUIRED)
     find_library(CS_LIB CoreServices REQUIRED)
     find_library(CT_LIB CoreText REQUIRED)
@@ -86,24 +96,25 @@ if(APPLE AND NOT BUILD_SHARED_LIBS)
     find_library(CF_LIB CoreFoundation REQUIRED)
     find_library(OPENGLES OpenGLES REQUIRED)
     find_library(UIKIT UIKit)
+    
     target_link_libraries(${PROJECT_NAME} PUBLIC ${CF_LIB} ${CT_LIB} ${IO_LIB} ${CS_LIB} ${CG_LIB} ${OPENGLES} ${UIKIT})
 
-    set(LAUNCH_SCREEN "${CMAKE_SOURCE_DIR}/templates/ios/LaunchScreen.storyboard")
-    set(ICON_NAME "SAppLogo.icns")
-    set(ICON_PATH "${CMAKE_SOURCE_DIR}/templates/ios/${ICON_NAME}")
-    set(RESOURCES ${LAUNCH_SCREEN} "${CMAKE_SOURCE_DIR}/assets")
-
     set_target_properties(${PROJECT_NAME} PROPERTIES 
-    MACOSX_BUNDLE TRUE
-    RESOURCE "${RESOURCES}"
-    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/templates/ios/Info.plist.in"
-    XCODE_IPHONEOS_DEPLOYMENT_TARGET 12.0
-    XCODE_GENERATE_SCHEME TRUE
-    XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES YES
-    XCODE_ATTRIBUTE_CODE_SIGN_STYLE “Automatic”
-    XCODE_ATTRIBUTE_BUNDLE_IDENTIFIER "com.unkengine.app.project"
-	XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.unkengine.app.project"
-	XCODE_ATTRIBUTE_CURRENTYEAR "${CURRENTYEAR}")
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/templates/ios/Info.plist.in"
+        XCODE_IPHONEOS_DEPLOYMENT_TARGET 12.0
+        XCODE_GENERATE_SCHEME TRUE
+        XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES YES
+        XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Automatic"
+        XCODE_ATTRIBUTE_BUNDLE_IDENTIFIER "com.unkengine.app.project"
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.unkengine.app.project"
+        XCODE_ATTRIBUTE_CURRENTYEAR "${CURRENTYEAR}"
+    )
+
+    # Ensure assets are copied into the bundle
+    set_source_files_properties(${ASSETS_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+    install(DIRECTORY ${ASSETS_PATH} DESTINATION "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app/Contents/Resources")
 
     if(CMAKE_OSX_SYSROOT MATCHES "iphonesimulator")
         message(STATUS "SIMULATOR BUILD")
@@ -118,8 +129,8 @@ if(APPLE AND NOT BUILD_SHARED_LIBS)
             XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "iphoneos"
             XCODE_ATTRIBUTE_ARCHS "arm64")
     endif()
-
 endif()
+
 
 # macosx
 if(APPLE AND BUILD_SHARED_LIBS)

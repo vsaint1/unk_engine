@@ -83,23 +83,23 @@ endif()
 # ios
 if(APPLE AND NOT BUILD_SHARED_LIBS)
     set(LAUNCH_SCREEN "${CMAKE_SOURCE_DIR}/templates/ios/LaunchScreen.storyboard")
-    set(ICON_NAME "SAppLogo.icns")
-    set(ICON_PATH "${CMAKE_SOURCE_DIR}/templates/ios/${ICON_NAME}")
+    set(ICON_PATH "${CMAKE_SOURCE_DIR}/templates/ios/AppLogo.icns")
     set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/assets")
 
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${LAUNCH_SCREEN} ${ASSETS_PATH})
 
-    find_library(IO_LIB ImageIO REQUIRED)
-    find_library(CS_LIB CoreServices REQUIRED)
-    find_library(CT_LIB CoreText REQUIRED)
-    find_library(CG_LIB CoreGraphics REQUIRED)
-    find_library(CF_LIB CoreFoundation REQUIRED)
-    find_library(OPENGLES OpenGLES REQUIRED)
-    find_library(UIKIT UIKit)
+    find_library(IO ImageIO REQUIRED)
+    find_library(CS CoreServices REQUIRED)
+    find_library(CT CoreText REQUIRED)
+    find_library(CG CoreGraphics REQUIRED)
+    find_library(CF CoreFoundation REQUIRED)
+    find_library(GL OpenGLES REQUIRED)
+    find_library(UKIT UIKit)
     
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CF_LIB} ${CT_LIB} ${IO_LIB} ${CS_LIB} ${CG_LIB} ${OPENGLES} ${UIKIT})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CS} ${CT} ${IO} ${CS} ${CG} ${GL} ${UKIT})
 
     set_target_properties(${PROJECT_NAME} PROPERTIES 
+        MACOSX_BUNDLE_ICON_FILE ${ICON_PATH}
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/templates/ios/Info.plist.in"
         XCODE_IPHONEOS_DEPLOYMENT_TARGET 12.0

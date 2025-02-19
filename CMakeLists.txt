@@ -44,6 +44,17 @@ set(SDLMIXER_MP3 ON)
 set(SDLMIXER_FLAC ON)
 add_subdirectory(vendor/SDL_mixer EXCLUDE_FROM_ALL)
 
+set(SDLIMAGE_VENDORED ON) # build own deps.
+set(SDLIMAGE_AVIF OFF)
+set(SDLIMAGE_JPEG OFF)
+set(SDLIMAGE_BMP OFF)
+set(SDLIMAGE_WEBP OFF)
+set(SDLIMAGE_PNG ON)
+set(SDLIMAGE_GIF ON)
+set(SDLIMAGE_SVG ON)
+add_subdirectory(vendor/SDL_image EXCLUDE_FROM_ALL)
+
+
 
 if(EMSCRIPTEN)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
@@ -146,6 +157,6 @@ endif()
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/src/public)
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer)
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer SDL3_image::SDL3_image)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)

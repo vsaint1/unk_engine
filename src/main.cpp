@@ -1,12 +1,11 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_init.h>
-#include <SDL3/SDL_main.h>
-#include <SDL3_ttf/SDL_ttf.h>
-// #include <SDL3_ttf/SDL_ttf.h>
-#include <SDL3_mixer/SDL_mixer.h>
-// #include <SDL3_image/SDL_image.h>
 #include <SDL3/SDL_iostream.h>
+#include <SDL3/SDL_main.h>
 #include <SDL3/SDL_system.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -26,10 +25,12 @@ const std::filesystem::path BASE_PATH = SDL_GetBasePath();
 struct AppContext {
     SDL_Window* window;
     SDL_Renderer* renderer;
-    SDL_Texture *messageTex, *imageTex;
+    SDL_Texture* messageTex;
+    SDL_Texture* imageTex;
     SDL_FRect messageDest;
+    SDL_FRect imageDest;
     SDL_AudioDeviceID audioDevice;
-    // Mix_Music* music;
+    Mix_Music* music;
     SDL_AppResult app_quit = SDL_APP_CONTINUE;
 };
 
@@ -108,6 +109,10 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     Mix_PlayMusic(music, 0); // once
 
+    SDL_Surface* imgSurface = IMG_Load(ASSETS_PATH.append("images/dragon.png").c_str());
+
+    SDL_Texture* imageTex = SDL_CreateTextureFromSurface(renderer, imgSurface);
+
     SDL_Surface* surfaceMessage = TTF_RenderText_Solid(mineFont, textFile.data(), textFile.length(), {255, 255, 255});
 
     SDL_Texture* messageTex = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
@@ -115,7 +120,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Content %s\n", textFile.c_str());
 
     TTF_CloseFont(mineFont);
+
     SDL_DestroySurface(surfaceMessage);
+    SDL_DestroySurface(imgSurface);
 
     SDL_ShowWindow(window);
     {
@@ -130,12 +137,19 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
             SDL_Log("This is a highdpi environment. \n");
         }
     }
+
+
     SDL_FRect messageRect = {10, 100, messageTex->w, messageTex->h};
 
-    *appstate =
-        new AppContext{.window = window, .renderer = renderer, .messageTex = messageTex, .messageDest = messageRect
+    SDL_FRect imageRect = {50,200, 256, 256};
 
-        };
+    *appstate = new AppContext{.window      = window,
+                               .renderer    = renderer,
+                               .messageTex  = messageTex,
+                               .imageTex    = imageTex,
+                               .messageDest = messageRect,
+                               .imageDest   = imageRect,
+                               .music       = music};
 
     SDL_SetRenderVSync(renderer, -1); // enable vysnc
 
@@ -156,14 +170,20 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* app = (AppContext*) appstate;
 
-    auto time  = SDL_GetTicks() / 1000.f;
-    auto red   = (std::sin(time) + 1) / 2.0 * 255;
-    auto green = (std::sin(time / 2) + 1) / 2.0 * 255;
-    auto blue  = (std::sin(time) * 2 + 1) / 2.0 * 255;
+    auto deltaTime = SDL_GetTicks() / 1000.f;
+    const auto FREQUENCY = 10;
+    float lerpFactor = (std::sin(deltaTime * FREQUENCY) + 1) / 2.0;
 
-    SDL_SetRenderDrawColor(app->renderer, red, green, blue, SDL_ALPHA_OPAQUE);
+    auto red   = 200 * (1 - lerpFactor) + 255 * lerpFactor;
+    auto green = 0 * (1 - lerpFactor) + 255 * lerpFactor;
+    auto blue  = 0 * (1 - lerpFactor) + 255 * lerpFactor;
+
+    SDL_SetRenderDrawColor(app->renderer, 0,0,0, SDL_ALPHA_OPAQUE);
+
     SDL_RenderClear(app->renderer);
 
+    SDL_SetTextureColorMod(app->imageTex,red,green,blue); // just a small example of color modulation
+    SDL_RenderTexture(app->renderer, app->imageTex, NULL, &app->imageDest);
 
     SDL_RenderTexture(app->renderer, app->messageTex, NULL, &app->messageDest);
 
@@ -177,8 +197,18 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
     if (app) {
         SDL_DestroyRenderer(app->renderer);
         SDL_DestroyWindow(app->window);
+
+        Mix_FadeOutMusic(1000);
+        Mix_FreeMusic(app->music);
+        Mix_CloseAudio();
+        SDL_CloseAudioDevice(app->audioDevice);
+
         delete app;
     }
+
+    TTF_Quit();
+    Mix_Quit();
+    SDL_Log("Application cleaned and quitting successfully \n");
 
     SDL_Quit();
 }

@@ -136,13 +136,14 @@ endif()
 if(APPLE AND BUILD_SHARED_LIBS)
     message(STATUS "BUILD MACOS")
     set(RESOURCES "${CMAKE_SOURCE_DIR}/assets")
+    find_library(OPENGL OpenGL REQUIRED)
 
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} )
 
     set_target_properties(${PROJECT_NAME} PROPERTIES 
     MACOSX_BUNDLE TRUE
     RESOURCE "${RESOURCES}")
-    target_link_libraries(${PROJECT_NAME} PRIVATE objc stdc++)
+    target_link_libraries(${PROJECT_NAME} PRIVATE objc stdc++ ${OPENGL})
  
 
 endif()

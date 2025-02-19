@@ -36,6 +36,28 @@ SDL_AppResult Engine::Initialize(const char* title, glm::vec2 window_size, SDL_W
         return SDL_APP_FAILURE;
     }
 
+#if GLES
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#elif defined(_WIN32)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    
+    SDL_GLContext glContext = SDL_GL_CreateContext(GEngine->GetWindow());
+
+    if (glContext) {
+        auto vendorName = glGetString(GL_VENDOR);
+        LOG_INFO("Vendor %s \n", vendorName);
+    }
+
+#endif
+
+   
+
+
     return SDL_APP_SUCCESS;
 }
 

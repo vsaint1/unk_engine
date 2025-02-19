@@ -37,26 +37,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
                        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL, true);
 
 
-#if GLES
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-
-#endif
-
-    SDL_GLContext glContext = SDL_GL_CreateContext(GEngine->GetWindow());
-
-    LOG_QUIT_ON_FAIL(glContext);
-
-    auto vendorName = glGetString(GL_VENDOR);
-    auto glRenderer = glGetString(GL_RENDERER);
-
-    LOG_INFO("Vendor %s, Renderer %s\n", vendorName, glRenderer);
 
     auto textFile = LoadFile("test.txt");
     auto jsonFile = LoadFile("test.json");

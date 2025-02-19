@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include "helpers/Json.hpp"
 
-#if defined(__EMSCRIPTEN__) || defined(__APPLE__) || defined(__ANDROID__)
+#if defined(__EMSCRIPTEN__) || defined(__IOS__) || defined(__ANDROID__)
 #include <SDL3/SDL_opengles2.h>
 #define GLES 1
 #else

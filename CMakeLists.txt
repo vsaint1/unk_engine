@@ -154,6 +154,7 @@ if(MSVC)
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL32.lib)
 
 endif()
 
@@ -163,6 +164,14 @@ if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     add_executable(${PROJECT_NAME} ${SOURCES})
 
+    # TODO
+
+    set(SHELL_HTML_FILE "${CMAKE_SOURCE_DIR}/templates/web/template.html")
+
+    if(NOT EXISTS ${SHELL_HTML_FILE})
+        message(FATAL_ERROR "Shell file not found: ${SHELL_HTML_FILE}")
+    endif()
+    
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/assets@/assets")
 

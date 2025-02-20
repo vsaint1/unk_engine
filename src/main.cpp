@@ -1,4 +1,5 @@
 #include "public/core/Engine.h"
+#include "public/core/ResourceMgr.h"
 #include "public/core/Timer.h"
 #include <SDL3/SDL_main.h> /* WARNING: This must be included only once! */
 
@@ -7,28 +8,7 @@ struct AppContext {
     SDL_Texture* imageTex;
     SDL_FRect messageDest;
     SDL_FRect imageDest;
-    Mix_Music* music;
 };
-
-
-std::string LoadFile(const std::string& filename) {
-
-    size_t filesize     = 0;
-    const auto filePath = ASSETS_PATH.append(filename);
-
-
-    void* data = SDL_LoadFile(filePath.c_str(), &filesize);
-
-    if (!data) {
-        LOG_ERROR("Failed to load file '%s': %s \n", filename.c_str(), SDL_GetError());
-        return "";
-    }
-
-    std::string content(static_cast<char*>(data), filesize);
-    SDL_free(data);
-
-    return content;
-}
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
@@ -38,19 +18,23 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
                         SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL,
                         false);
 
+    auto textFile = ResourceManager::GetInstance().LoadFromFile("test.txt");
+    auto jsonFile = ResourceManager::GetInstance().LoadFromFile("test.json");
 
-    auto textFile = LoadFile("test.txt");
-    auto jsonFile = LoadFile("test.json");
+    Json json      = Json::parse(jsonFile);
+    json["player"] = "John Doe";
+    json["health"] = 100;
 
-    Json json = Json::parse(jsonFile);
+    // Small example saving data
+    ResourceManager::GetInstance().WriteToFile("save.dat", json.dump().c_str(), json.dump().length());
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "JSON: %s \n", json.dump(4).c_str());
+    LOG_INFO("JSON: %s \n", json.dump(4).c_str());
 
-    TTF_Font* mineFont = TTF_OpenFont(ASSETS_PATH.append("fonts/Minecraft.ttf").c_str(), 32);
+    auto mineFont = ResourceManager::GetInstance().GetFont("fonts/Minecraft.ttf", 32);
 
     LOG_QUIT_ON_FAIL(mineFont);
 
-    auto music = Mix_LoadMUS(ASSETS_PATH.append("sounds/lullaby.mp3").c_str());
+    auto music = ResourceManager::GetInstance().GetMusic("sounds/lullaby.mp3"); // Auto-cleanup
 
     LOG_QUIT_ON_FAIL(music);
 
@@ -60,20 +44,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     Mix_PlayMusic(music, 0); // once
 
-    SDL_Surface* imgSurface = IMG_Load(ASSETS_PATH.append("images/dragon.png").c_str());
+    SDL_Texture* image = ResourceManager::GetInstance().GetTexture("images/dragon.png");
 
-    SDL_Texture* imageTex = SDL_CreateTextureFromSurface(GEngine->GetRenderer(), imgSurface);
+    SDL_Texture* message =
+        ResourceManager::GetInstance().CreateFontTexture("message", textFile, mineFont, {255, 255, 255});
 
-    SDL_Surface* surfaceMessage = TTF_RenderText_Solid(mineFont, textFile.data(), textFile.length(), {255, 255, 255});
-
-    SDL_Texture* messageTex = SDL_CreateTextureFromSurface(GEngine->GetRenderer(), surfaceMessage);
+    SDL_Texture* hello =
+        ResourceManager::GetInstance().CreateFontTexture("intro_message", "Hello world", mineFont, {255, 255, 255});
 
     LOG_INFO("Content %s\n", textFile.c_str());
-
-    TTF_CloseFont(mineFont);
-
-    SDL_DestroySurface(surfaceMessage);
-    SDL_DestroySurface(imgSurface);
 
     auto gpuDriver = SDL_GetGPUDriver(0);
     SDL_ShowWindow(GEngine->GetWindow());
@@ -95,17 +74,13 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     }
 
 
-    SDL_FRect messageRect = {10, 100, messageTex->w, messageTex->h};
+    SDL_FRect messageRect = {10, 100, message->w, message->h};
 
     SDL_FRect imageRect = {50, 200, 256, 256};
 
     *appstate = new AppContext{
 
-        .messageTex  = messageTex,
-        .imageTex    = imageTex,
-        .messageDest = messageRect,
-        .imageDest   = imageRect,
-        .music       = music};
+        .messageTex = message, .imageTex = image, .messageDest = messageRect, .imageDest = imageRect};
 
 
     return GEngine->engineState;
@@ -131,9 +106,9 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     std::string title = "[UNK_ENGINE] - Window, " + GFrameManager->GetFpsText();
     SDL_SetWindowTitle(GEngine->GetWindow(), title.c_str());
 
-    LOG_INFO("delta time %f", GFrameManager->GetDeltaTime());
+    // LOG_INFO("delta time %f", GFrameManager->GetDeltaTime());
 
-    const float FREQUENCY = 10000.0;
+    const float FREQUENCY = 1000.0;
     float lerpFactor      = (std::sin(GFrameManager->GetDeltaTime() * FREQUENCY) + 1.0f) * 0.5f;
 
     auto red   = 200 * (1 - lerpFactor) + 255 * lerpFactor;
@@ -141,15 +116,17 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     auto blue  = 255 * (1 - lerpFactor) + 255 * lerpFactor;
 
     SDL_SetRenderDrawColor(GEngine->GetRenderer(), 0, 0, 0, SDL_ALPHA_OPAQUE);
+
     SDL_RenderClear(GEngine->GetRenderer());
 
     SDL_SetTextureColorMod(app->imageTex, red, green, blue);
+    SDL_SetTextureScaleMode(app->imageTex, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
     SDL_RenderTexture(GEngine->GetRenderer(), app->imageTex, NULL, &app->imageDest);
     SDL_RenderTexture(GEngine->GetRenderer(), app->messageTex, NULL, &app->messageDest);
 
     SDL_RenderPresent(GEngine->GetRenderer());
 
-    GFrameManager->FixedFrameRate();
+    GFrameManager->FixedFrameRate(60);
 
     return GEngine->engineState;
 }
@@ -157,20 +134,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
     auto* app = (AppContext*) appstate;
     if (app) {
-        SDL_DestroyRenderer(GEngine->GetRenderer());
-        SDL_DestroyWindow(GEngine->GetWindow());
-
-        Mix_FadeOutMusic(1000);
-        Mix_FreeMusic(app->music);
-        Mix_CloseAudio();
-        SDL_CloseAudioDevice(GEngine->GetAudioDevice());
-
         delete app;
     }
 
-    TTF_Quit();
-    Mix_Quit();
-    LOG_INFO("Application cleaned and quitting successfully \n");
-
-    SDL_Quit();
+    GEngine->Cleanup();
 }

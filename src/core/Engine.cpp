@@ -45,7 +45,7 @@ SDL_AppResult Engine::Initialize(const char* title, glm::vec2 window_size, SDL_W
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    
+
     SDL_GLContext glContext = SDL_GL_CreateContext(GEngine->GetWindow());
 
     if (glContext) {
@@ -54,8 +54,6 @@ SDL_AppResult Engine::Initialize(const char* title, glm::vec2 window_size, SDL_W
     }
 
 #endif
-
-   
 
 
     return SDL_APP_SUCCESS;
@@ -101,4 +99,21 @@ SDL_AppResult Engine::InitializeModules() {
 
 
     return SDL_APP_SUCCESS;
+}
+
+void Engine::Cleanup() {
+
+    SDL_DestroyRenderer(GEngine->GetRenderer());
+    SDL_DestroyWindow(GEngine->GetWindow());
+
+    Mix_FadeOutMusic(1000);
+    Mix_CloseAudio();
+    SDL_CloseAudioDevice(GEngine->GetAudioDevice());
+
+    TTF_Quit();
+    Mix_Quit();
+
+    LOG_INFO("Application cleaned and quitting successfully \n");
+
+    SDL_Quit();
 }

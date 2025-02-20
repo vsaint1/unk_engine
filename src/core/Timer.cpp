@@ -17,7 +17,8 @@ void FrameManager::Update() {
     }
 }
 
-void FrameManager::FixedFrameRate() {
+void FrameManager::FixedFrameRate(Uint32 MAX_FPS) {
+    this->MAX_FPS = MAX_FPS;
 
     if (MAX_FPS > 1) {
         float delay = 1000.0f / MAX_FPS;

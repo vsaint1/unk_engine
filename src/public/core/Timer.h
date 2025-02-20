@@ -41,7 +41,8 @@ FrameManager() {}
 
     void Update();
 
-    void FixedFrameRate();
+    /* MAX_FPS = 1 -> UNLIMITED */
+    void FixedFrameRate(Uint32 MAX_FPS = 60);
 
 };
 

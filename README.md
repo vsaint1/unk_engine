@@ -31,7 +31,7 @@ git submodule update --init --recursive
 > Tested on Android emulator, used Pixel 8 API 30 and Samsung Galaxy A15
 
 - Android Studio [4.1.x](https://developer.android.com/studio/)
-  - Androi SDK [34.x](https://developer.android.com/studio/)
+  - Android SDK [34.x](https://developer.android.com/studio/)
   - Android NDK [25.x](https://developer.android.com/ndk/downloads/)
   - Android Command-Line Tools [16.x](https://developer.android.com/studio/command-line)
 

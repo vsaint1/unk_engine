@@ -34,6 +34,10 @@ public:
     SDL_AudioDeviceID GetAudioDevice() {
         return this->audioDevice;
     }
+
+    void SetVsync(bool bEnableVsync){
+        SDL_SetRenderVSync(this->renderer, bEnableVsync ? SDL_RENDERER_VSYNC_ADAPTIVE : SDL_RENDERER_VSYNC_DISABLED);
+    }
 };
 
 inline auto GEngine = std::make_unique<Engine>();

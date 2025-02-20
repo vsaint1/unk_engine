@@ -1,4 +1,5 @@
 #include "public/core/Engine.h"
+#include "public/core/Timer.h"
 #include <SDL3/SDL_main.h> /* WARNING: This must be included only once! */
 
 struct AppContext {
@@ -34,9 +35,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     /* This will fail and not continue if SDL_Init/CreateWindow fails */
     GEngine->Initialize("[UNK_ENGINE] - Window", {800, 600},
-                       SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL, true);
-
-
+                        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL,
+                        false);
 
 
     auto textFile = LoadFile("test.txt");
@@ -121,27 +121,35 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     return GEngine->engineState;
 }
 
+
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* app = (AppContext*) appstate;
 
-    auto deltaTime       = SDL_GetTicks() / 1000.f;
-    const auto FREQUENCY = 5;
-    float lerpFactor     = std::sin(deltaTime * FREQUENCY) / 2.0;
+
+    GFrameManager->Update();
+
+    std::string title = "[UNK_ENGINE] - Window, " + GFrameManager->GetFpsText();
+    SDL_SetWindowTitle(GEngine->GetWindow(), title.c_str());
+
+    LOG_INFO("delta time %f", GFrameManager->GetDeltaTime());
+
+    const float FREQUENCY = 10000.0;
+    float lerpFactor      = (std::sin(GFrameManager->GetDeltaTime() * FREQUENCY) + 1.0f) * 0.5f;
 
     auto red   = 200 * (1 - lerpFactor) + 255 * lerpFactor;
     auto green = 255 * (1 - lerpFactor) + 255 * lerpFactor;
     auto blue  = 255 * (1 - lerpFactor) + 255 * lerpFactor;
 
     SDL_SetRenderDrawColor(GEngine->GetRenderer(), 0, 0, 0, SDL_ALPHA_OPAQUE);
-
     SDL_RenderClear(GEngine->GetRenderer());
 
-    SDL_SetTextureColorMod(app->imageTex, red, green, blue); // just a small example of color modulation
+    SDL_SetTextureColorMod(app->imageTex, red, green, blue);
     SDL_RenderTexture(GEngine->GetRenderer(), app->imageTex, NULL, &app->imageDest);
-
     SDL_RenderTexture(GEngine->GetRenderer(), app->messageTex, NULL, &app->messageDest);
 
     SDL_RenderPresent(GEngine->GetRenderer());
+
+    GFrameManager->FixedFrameRate();
 
     return GEngine->engineState;
 }

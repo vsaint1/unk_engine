@@ -166,7 +166,6 @@ if(EMSCRIPTEN)
     add_executable(${PROJECT_NAME} ${SOURCES})
 
     # TODO
-
     set(SHELL_HTML_FILE "${CMAKE_SOURCE_DIR}/templates/web/template.html")
 
     if(NOT EXISTS ${SHELL_HTML_FILE})

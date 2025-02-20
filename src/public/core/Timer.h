@@ -14,10 +14,13 @@ class FrameManager {
     float fps         = 0.0;
 
     /* MAX_FPS = 1 -> UNLIMITED */
-    Uint32 MAX_FPS = 60;
+    Uint32 MAX_FPS    = 60;
+    bool bIsPaused    = false;
+    Uint64 pausedTick = 0;
+
 
 public:
-FrameManager() {}
+    FrameManager() {}
 
     float GetDeltaTime() {
         return this->deltaTime;
@@ -25,6 +28,10 @@ FrameManager() {}
 
     Uint64 GetFrameCount() {
         return this->frameCount;
+    }
+
+    float GetElapsedTime(){
+        return this->elapsedTime;
     }
 
     void SetMaxFps(Uint32 fps) {
@@ -35,15 +42,34 @@ FrameManager() {}
         return this->fps;
     }
 
-    std::string GetFpsText(){
+    std::string GetFpsText() {
         return std::to_string(this->fps);
+    }
+
+    void Pause() {
+        if (!bIsPaused) {
+            bIsPaused  = true;
+            pausedTick = SDL_GetPerformanceCounter();
+        }
+    }
+
+    void Resume() {
+        if (bIsPaused) {
+            bIsPaused         = false;
+            Uint64 resumeTick = SDL_GetPerformanceCounter();
+            lastTick += (resumeTick - pausedTick);
+            pausedTick = 0;
+        }
+    }
+
+    bool IsPaused() {
+        return this->bIsPaused;
     }
 
     void Update();
 
     /* MAX_FPS = 1 -> UNLIMITED */
     void FixedFrameRate(Uint32 MAX_FPS = 60);
-
 };
 
 inline auto GFrameManager = std::make_unique<FrameManager>();

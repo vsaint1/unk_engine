@@ -3,11 +3,13 @@
 #include "public/core/Timer.h"
 #include <SDL3/SDL_main.h> /* WARNING: This must be included only once! */
 
-struct AppContext {
+/* JUST FOR DEVELOPMENT AND EXAMPLE */
+struct GameContext {
     SDL_Texture* messageTex;
     SDL_Texture* imageTex;
     SDL_FRect messageDest;
     SDL_FRect imageDest;
+    Mix_Music* music;
 };
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
@@ -44,6 +46,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     Mix_PlayMusic(music, 0); // once
 
+
     SDL_Texture* image = ResourceManager::GetInstance().GetTexture("images/dragon.png");
 
     SDL_Texture* message =
@@ -78,19 +81,36 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     SDL_FRect imageRect = {50, 200, 256, 256};
 
-    *appstate = new AppContext{
+    *appstate = new GameContext{
 
-        .messageTex = message, .imageTex = image, .messageDest = messageRect, .imageDest = imageRect};
+        .messageTex  = message,
+        .imageTex    = image,
+        .messageDest = messageRect,
+        .imageDest   = imageRect,
+
+    };
 
 
     return GEngine->engineState;
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
-    auto* app = (AppContext*) appstate;
+    auto* app = (GameContext*) appstate;
 
     if (event->type == SDL_EVENT_QUIT) {
         GEngine->engineState = SDL_APP_SUCCESS;
+    }
+
+    if (event->type == SDL_EVENT_KEY_DOWN && event->key.scancode == SDL_SCANCODE_P) {
+
+        if (GFrameManager->IsPaused()) {
+            LOG_INFO("Resuming \n");
+            GFrameManager->Resume();
+        } else {
+            LOG_INFO("Pausing \n");
+
+            GFrameManager->Pause();
+        }
     }
 
     return GEngine->engineState;
@@ -98,20 +118,19 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
-    auto* app = (AppContext*) appstate;
+    auto* app = (GameContext*) appstate;
 
 
     GFrameManager->Update();
 
-    std::string title = "[UNK_ENGINE] - Window, " + GFrameManager->GetFpsText();
+    const auto gameStatus = GFrameManager->IsPaused() ? " - [Paused]" : " - [Running]";
+    std::string title     = "[UNK_ENGINE] - Window, " + GFrameManager->GetFpsText() + gameStatus;
     SDL_SetWindowTitle(GEngine->GetWindow(), title.c_str());
 
-    // LOG_INFO("delta time %f", GFrameManager->GetDeltaTime());
+    const float FREQUENCY = 2.f;
+    float lerpFactor      = (std::sin(GFrameManager->GetElapsedTime() * FREQUENCY * M_PI) + 1.0f) * 0.5f;
 
-    const float FREQUENCY = 1000.0;
-    float lerpFactor      = (std::sin(GFrameManager->GetDeltaTime() * FREQUENCY) + 1.0f) * 0.5f;
-
-    auto red   = 200 * (1 - lerpFactor) + 255 * lerpFactor;
+    auto red   = 150 * (1 - lerpFactor) + 255 * lerpFactor;
     auto green = 255 * (1 - lerpFactor) + 255 * lerpFactor;
     auto blue  = 255 * (1 - lerpFactor) + 255 * lerpFactor;
 
@@ -132,7 +151,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 }
 
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
-    auto* app = (AppContext*) appstate;
+    auto* app = (GameContext*) appstate;
     if (app) {
         delete app;
     }

@@ -1,6 +1,9 @@
 #include "../public/core/Timer.h"
 
 void FrameManager::Update() {
+    if (bIsPaused) {
+        return;
+    }
 
     currentTick = SDL_GetPerformanceCounter();
 

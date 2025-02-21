@@ -2,6 +2,9 @@
 #include "ResourceMgr.h"
 #include "helpers/Utilities.h"
 
+struct CollisionObject {
+    float x, y, width, height;
+};
 
 class TileLayer {
     Uint32 id;
@@ -68,6 +71,7 @@ class TiledMap {
 public:
     std::vector<TileLayer> layers;
     std::vector<Tileset> tilesets;
+    std::vector<CollisionObject> collisions;
     Uint32 tileSize = 16;
     std::string name;
     std::string source;
@@ -111,6 +115,8 @@ protected:
     void AddTileset(Uint32 firstgid, SDL_Texture* texture, const std::string& name, Uint32 columns, Uint32 tileCount) {
         tilesets.push_back({firstgid, texture, name, columns, tileCount});
     }
+
+    void ParseObjectGroup(XMLElement* objectGroup);
 
     std::string mapPath      = "";
     Uint16 renderOrder       = 0;

@@ -14,29 +14,18 @@ struct GameContext {
     TiledMap map;
 };
 
-// refactor this and manage to use assets folder or load from .pak. EX: development -> load from assets and shipping ->
-// load from .pak
-
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 
-    Pak pak;
-    pak.LoadPakFile(ASSETS_PATH.append("assets.pak"));
-
-    auto files = pak.ListFiles();
-    auto file  = pak.ReadFile("images/dragon.png");
-
-
     /* This will fail and not continue if SDL_Init/CreateWindow fails */
-    GEngine->Initialize("[UNK_ENGINE] - Window", {800, 600},
-                        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL,
-                        false);
+    GEngine->Initialize("[UNK_ENGINE] - Window", {1280, 720},
+                        SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL, false);
 
     auto textFile = ResourceManager::GetInstance().LoadFromFile("test.txt");
     auto jsonFile = ResourceManager::GetInstance().LoadFromFile("test.json");
 
-    TiledMap map("map/overworld_map.xml");
+    TiledMap map("map/overworld_map_test_obj.xml");
 
     map.Awake();
 
@@ -56,7 +45,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     auto music = ResourceManager::GetInstance().GetMusic("sounds/the_entertainer.ogg"); // Auto-cleanup
 
     LOG_QUIT_ON_FAIL(music);
-    
+
     Mix_PlayMusic(music, 0); // once
     auto vec = glm::vec3(1, 1, 1);
 
@@ -93,7 +82,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     }
 
 
-    SDL_FRect messageRect = {10, 100, message->w, message->h};
+    SDL_FRect messageRect = {10, 500, message->w, message->h};
 
     SDL_FRect imageRect = {50, 200, 256, 256};
 
@@ -165,9 +154,12 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     SDL_RenderTexture(GEngine->GetRenderer(), app->messageTex, NULL, &app->messageDest);
     SDL_RenderTexture(GEngine->GetRenderer(), app->imageTex, NULL, &app->imageDest);
 
+    // 320x180 |  640x360 | 1280x720 -> 13:9 |  16:9 |  4:3
+    SDL_SetRenderLogicalPresentation(GEngine->GetRenderer(), 320, 180, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
     SDL_RenderPresent(GEngine->GetRenderer());
 
-    GFrameManager->FixedFrameRate();
+    GFrameManager->FixedFrameRate(60);
 
     return GEngine->engineState;
 }

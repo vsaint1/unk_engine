@@ -41,7 +41,7 @@ void TileLayer::DecodeTile(const std::string& encoded_data, int map_width, int m
 
 void TiledMap::Awake() {
     XMLDocument document;
-    
+
     auto content = ResourceManager::GetInstance().LoadFromFile(mapPath);
 
     document.Parse(content.c_str(), content.length());
@@ -134,6 +134,28 @@ void TiledMap::Awake() {
     }
 
     this->layers = layers;
+
+    for (XMLElement* objectGroup = mapElement->FirstChildElement("objectgroup"); objectGroup;
+         objectGroup             = objectGroup->NextSiblingElement("objectgroup")) {
+
+        LOG_INFO("Loading object group: %s \n", objectGroup->Attribute("name"));
+        ParseObjectGroup(objectGroup);
+    }
+}
+
+void TiledMap::ParseObjectGroup(XMLElement* objectGroup) {
+    if (!objectGroup) return;
+
+    for (XMLElement* object = objectGroup->FirstChildElement("object"); object; object = object->NextSiblingElement("object")) {
+        float x = object->FloatAttribute("x");
+        float y = object->FloatAttribute("y");
+        float width = object->FloatAttribute("width");
+        float height = object->FloatAttribute("height");
+        LOG_INFO("Collision object: x: %f, y: %f, width: %f, height: %f", x, y, width, height);
+        this->collisions.push_back({x, y, width, height});
+    }
+
+    LOG_INFO("Loaded %d collision objects.", static_cast<int>(collisions.size()));
 }
 
 /* BRIEF: We render each layer (currently this is only for uniform sized tiles ex: (16x16,32x32))*/
@@ -171,6 +193,7 @@ void TiledMap::Render(SDL_Renderer* renderer) {
                         SDL_FRect destRect = {static_cast<float>(x * tileSize), static_cast<float>(y * tileSize),
                                               static_cast<float>(tileSize), static_cast<float>(tileSize)};
 
+                        SDL_SetTextureScaleMode(tileset.texture, SDL_SCALEMODE_NEAREST);
                         SDL_RenderTexture(renderer, tileset.texture, &srcRect, &destRect);
                         break;
                     }
@@ -178,4 +201,12 @@ void TiledMap::Render(SDL_Renderer* renderer) {
             }
         }
     }
+
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    for (const auto& obj : collisions) {
+        SDL_FRect rect = {obj.x, obj.y, obj.width, obj.height};
+        SDL_RenderRect(renderer, &rect);
+    }
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }

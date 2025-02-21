@@ -52,6 +52,7 @@ set(SDLIMAGE_WEBP OFF)
 set(SDLIMAGE_PNG ON)
 set(SDLIMAGE_GIF ON)
 set(SDLIMAGE_SVG ON)
+set(SDL2IMAGE_ZLIB  ON)
 add_subdirectory(vendor/SDL_image EXCLUDE_FROM_ALL)
 
 set(GLM_BUILD_LIBRARY OFF CACHE BOOL "" FORCE)
@@ -182,6 +183,7 @@ if(EMSCRIPTEN)
 
 endif()
 
+# WARNING: HERE WE LINK ALL DEPENDENCIES, `MUST BE CROSS-PLATFORM AND NOT PLATFORM SPECIFIC`
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/public)
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer SDL3_image::SDL3_image glm::glm) 

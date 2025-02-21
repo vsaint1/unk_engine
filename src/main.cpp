@@ -1,7 +1,8 @@
 #include "public/core/Engine.h"
-#include "public/core/ResourceMgr.h"
+#include "public/core/TileMgr.h"
 #include "public/core/Timer.h"
 #include <SDL3/SDL_main.h> /* WARNING: This must be included only once! */
+
 
 /* JUST FOR DEVELOPMENT AND EXAMPLE */
 struct GameContext {
@@ -10,7 +11,10 @@ struct GameContext {
     SDL_FRect messageDest;
     SDL_FRect imageDest;
     Mix_Music* music;
+    TiledMap map;
 };
+
+
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
@@ -22,6 +26,22 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     auto textFile = ResourceManager::GetInstance().LoadFromFile("test.txt");
     auto jsonFile = ResourceManager::GetInstance().LoadFromFile("test.json");
+
+    XMLDocument mapDoc;
+    auto mapFile = ResourceManager::GetInstance().LoadFromFile("map/overworld_map.xml");
+
+    mapDoc.Parse(mapFile.c_str(), mapFile.length());
+
+
+    XMLPrinter printer;
+
+
+    mapDoc.Print(&printer);
+    LOG_INFO("XML: %s \n", printer.CStr());
+
+    TiledMap map("map/overworld_map_test.xml");
+    
+    map.Awake();
 
     Json json      = Json::parse(jsonFile);
     json["player"] = "John Doe";
@@ -83,10 +103,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     *appstate = new GameContext{
 
-        .messageTex  = message,
-        .imageTex    = image,
-        .messageDest = messageRect,
-        .imageDest   = imageRect,
+        .messageTex = message, .imageTex = image, .messageDest = messageRect, .imageDest = imageRect, .map = map
 
     };
 
@@ -116,7 +133,6 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     return GEngine->engineState;
 }
 
-
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* app = (GameContext*) appstate;
 
@@ -140,12 +156,17 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     SDL_SetTextureColorMod(app->imageTex, red, green, blue);
     SDL_SetTextureScaleMode(app->imageTex, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
-    SDL_RenderTexture(GEngine->GetRenderer(), app->imageTex, NULL, &app->imageDest);
+
+    // WARNING: order matters!!!
+
+    app->map.Render(GEngine->GetRenderer());
+
     SDL_RenderTexture(GEngine->GetRenderer(), app->messageTex, NULL, &app->messageDest);
+    SDL_RenderTexture(GEngine->GetRenderer(), app->imageTex, NULL, &app->imageDest);
 
     SDL_RenderPresent(GEngine->GetRenderer());
 
-    GFrameManager->FixedFrameRate(60);
+    GFrameManager->FixedFrameRate(1);
 
     return GEngine->engineState;
 }

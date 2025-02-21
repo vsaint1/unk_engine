@@ -20,7 +20,7 @@ class FrameManager {
 
 
 public:
-    FrameManager() {}
+    FrameManager() = default;
 
     float GetDeltaTime() {
         return this->deltaTime;

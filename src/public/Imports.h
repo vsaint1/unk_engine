@@ -17,13 +17,25 @@
 #include <vector>
 #include <unordered_map>
 #include "helpers/Json.hpp"
+#include "helpers/TinyXml.h"
+
+/* ENABLE MATH CONSTANTS*/
+#define _USE_MATH_DEFINES 1
+#include <math.h>
+
+/* BRIEF: i couldnt manage to get this to work on emscripten, for now is disabled */
+#ifdef USE_ZLIB 0
+    #include <zlib.h>
+#endif
 
 #if defined(__EMSCRIPTEN__) || defined(__IOS__) || defined(__ANDROID__)
-#include <SDL3/SDL_opengles2.h>
+    #include <SDL3/SDL_opengles2.h>
 #define GLES 1
 #else
-#include <SDL3/SDL_opengl.h>
+    #include <SDL3/SDL_opengl.h>
 #define GLES 0
 #endif
 
-using Json = nlohmann::json; 
+using Json = nlohmann::json; // Simplify access to JSON
+
+using namespace tinyxml2; // Simplify access to XML

@@ -38,7 +38,7 @@ public:
 
     void Cleanup();
 
-    Engine() {}
+    Engine() = default;
 
 private:
     Engine(const Engine&)            = delete;

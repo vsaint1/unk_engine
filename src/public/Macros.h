@@ -12,7 +12,5 @@ const std::filesystem::path BASE_PATH = SDL_GetBasePath();
 #define ASSETS_PATH std::string("assets/")
 #endif
 
-#define ENGINE_NAME "unk_engine"
-#define ENGINE_VERSION_STR "0.0.1" 
-
-#include <corecrt_math_defines.h>
+#define ENGINE_NAME        "unk_engine"
+#define ENGINE_VERSION_STR "0.0.1"

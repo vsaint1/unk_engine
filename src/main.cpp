@@ -158,7 +158,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     SDL_RenderPresent(GEngine->GetRenderer());
 
-    GFrameManager->FixedFrameRate(1);
+    GFrameManager->FixedFrameRate();
 
     return GEngine->engineState;
 }

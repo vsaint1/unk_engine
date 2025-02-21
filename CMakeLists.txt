@@ -12,6 +12,15 @@ set(CMAKE_C_STANDARD 99)
 
 set(ASSETS_FOLDER ${CMAKE_SOURCE_DIR}/assets)
 
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(BUILD_SHIPPING 1)
+else()
+    set(BUILD_SHIPPING 0)
+endif()
+
+add_compile_definitions(BUILD_SHIPPING=${BUILD_SHIPPING})
+
 # ios and web
 if ((APPLE AND NOT CMAKE_SYSTEM_NAME MATCHES "Darwin") OR EMSCRIPTEN)
     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")    # Disable shared builds on platforms where it does not make sense to use them
@@ -81,11 +90,16 @@ if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
 endif()
 
-# ios
+# iOS [simulator/device]
 if(APPLE AND NOT BUILD_SHARED_LIBS)
     set(LAUNCH_SCREEN "${CMAKE_SOURCE_DIR}/templates/ios/LaunchScreen.storyboard")
     set(ICON_PATH "${CMAKE_SOURCE_DIR}/templates/ios/AppLogo.icns")
-    set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/assets")
+    
+    if(BUILD_SHIPPING)
+        set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/assets/assets.pak")
+    else()
+        set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/assets")
+    endif()
 
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${LAUNCH_SCREEN} ${ASSETS_PATH})
 
@@ -149,37 +163,42 @@ if(APPLE AND BUILD_SHARED_LIBS)
 
 endif()
 
-
+# Windows [x86/x64/arm]
 if(MSVC)
     add_executable(${PROJECT_NAME} ${SOURCES})
 
-    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL32.lib)
+    if(BUILD_SHIPPING)
+        add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_SOURCE_DIR}/assets/assets.pak
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/assets.pak)
+    else()
+        add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
+    endif()
 
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL32.lib)
 endif()
 
-
-
+# WASM [emscripten]
 if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     add_executable(${PROJECT_NAME} ${SOURCES})
 
-    # TODO
     set(SHELL_HTML_FILE "${CMAKE_SOURCE_DIR}/templates/web/template.html")
-
     if(NOT EXISTS ${SHELL_HTML_FILE})
         message(FATAL_ERROR "Shell file not found: ${SHELL_HTML_FILE}")
     endif()
-    
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/assets@/assets")
 
-    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --embed-file ${CMAKE_SOURCE_DIR}/assets@/assets")
 
+    # TODO: copy assets
+    # add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    #     COMMAND ${CMAKE_COMMAND} -E copy_directory
+    #     ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
 
 endif()
 

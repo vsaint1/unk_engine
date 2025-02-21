@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine.h"
-
+#include "helpers/PakLoader.h"
+#include <SDL3_mixer/SDL_mixer.h>
 
 enum EScaleMode { LINEAR = 0, NEAREST };
 
@@ -14,9 +15,9 @@ class ResourceManager {
     std::unordered_map<std::string, SDL_Surface*> surfaces;
     std::unordered_map<std::string, SDL_Texture*> textures;
 
-    std::unordered_map<std::string, TTF_Font*> fonts;
+    std::unordered_map<std::string,TTF_Font*> fonts;
+    std::unordered_map<std::string,Mix_Music*> musics;
     std::unordered_map<std::string, Mix_Chunk*> sounds;
-    std::unordered_map<std::string, Mix_Music*> music;
 
 public:
     static ResourceManager& GetInstance();
@@ -42,7 +43,7 @@ public:
 
     std::string GetExternalStorage() {
 #if defined(__ANDROID__)
-        return SDL_AndroidGetExternalStoragePath();
+        return SDL_GetAndroidExternalStoragePath();
 #elif defined(__APPLE__)
 #if __IOS__
         NSArray* paths          = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);

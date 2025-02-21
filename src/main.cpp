@@ -14,8 +14,18 @@ struct GameContext {
     TiledMap map;
 };
 
+// refactor this and manage to use assets folder or load from .pak. EX: development -> load from assets and shipping ->
+// load from .pak
+
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
+
+
+    Pak pak;
+    pak.LoadPakFile(ASSETS_PATH.append("assets.pak"));
+
+    auto files = pak.ListFiles();
+    auto file  = pak.ReadFile("images/dragon.png");
 
 
     /* This will fail and not continue if SDL_Init/CreateWindow fails */
@@ -43,15 +53,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     LOG_QUIT_ON_FAIL(mineFont);
 
-    auto music = ResourceManager::GetInstance().GetMusic("sounds/lullaby.mp3"); // Auto-cleanup
+    auto music = ResourceManager::GetInstance().GetMusic("sounds/the_entertainer.ogg"); // Auto-cleanup
 
     LOG_QUIT_ON_FAIL(music);
-
+    
+    Mix_PlayMusic(music, 0); // once
     auto vec = glm::vec3(1, 1, 1);
 
     LOG_INFO("glm_vec %f %f %f \n", vec.x, vec.y, vec.z);
-
-    Mix_PlayMusic(music, 0); // once
 
 
     SDL_Texture* image = ResourceManager::GetInstance().GetTexture("images/dragon.png");

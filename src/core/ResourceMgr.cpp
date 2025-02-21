@@ -16,38 +16,69 @@ TTF_Font* ResourceManager::GetFont(const std::string& path, int size) {
         return fonts[path];
     }
 
+#if BUILD_SHIPPING == 0
     TTF_Font* font = TTF_OpenFont(this->GetAssetsPath().append(path).c_str(), size);
 
     if (!font) {
         LOG_ERROR("Failed to load font '%s': %s \n", path.c_str(), SDL_GetError());
         return nullptr;
     }
+#else
 
+    Pak pak;
+    pak.LoadPakFile(ASSETS_PATH.append("assets.pak"));
+
+    auto file = pak.ReadFile(path);
+
+
+    void* mem_buffer = SDL_malloc(file.size());
+    SDL_memcpy(mem_buffer, file.data(), file.size());
+
+    SDL_IOStream* mem_rw = SDL_IOFromConstMem(mem_buffer, file.size());
+
+    TTF_Font* font = TTF_OpenFontIO(mem_rw, 1, size);
+
+
+#endif
 
     this->fonts[path] = font;
 
-    return font;
+    return this->fonts[path];
 }
 
 Mix_Music* ResourceManager::GetMusic(const std::string& path) {
-
     if (path.empty()) {
         LOG_WARN("Path is empty!");
         return nullptr;
     }
 
-    if (music.find(path) != music.end()) {
-        return music[path];
+    auto it = musics.find(path);
+    if (it != musics.end()) {
+        return it->second;
     }
 
-    Mix_Music* music = Mix_LoadMUS(this->GetAssetsPath().append(path).c_str());
 
+#if BUILD_SHIPPING == 0
+    Mix_Music* music = Mix_LoadMUS(this->GetAssetsPath().append(path).c_str());
     if (!music) {
-        LOG_ERROR("Failed to load music '%s': %s \n", path.c_str(), SDL_GetError());
+        LOG_ERROR("Failed to load music '%s': %s\n", path.c_str(), SDL_GetError());
         return nullptr;
     }
+#else
+    Pak pak;
+    pak.LoadPakFile(ASSETS_PATH.append("assets.pak"));
+    auto file = pak.ReadFileToMemory(path);
 
-    this->music[path] = music;
+    void* mem_buffer = SDL_malloc(file.size());
+    SDL_memcpy(mem_buffer, file.data(), file.size());
+
+    SDL_IOStream* mem_rw = SDL_IOFromConstMem(mem_buffer, file.size());
+
+    Mix_Music* music = Mix_LoadMUS_IO(mem_rw, 0);
+
+#endif
+
+    musics[path] = music;
     return music;
 }
 
@@ -63,14 +94,25 @@ SDL_Surface* ResourceManager::GetSurface(const std::string& path) {
         return surfaces[path];
     }
 
+
+#if BUILD_SHIPPING == 0
     SDL_Surface* surface = IMG_Load(this->GetAssetsPath().append(path).c_str());
     if (!surface) {
         LOG_ERROR("Failed to load surface '%s': %s \n", path.c_str(), SDL_GetError());
         return nullptr;
     }
+#else
+    Pak pak;
+    pak.LoadPakFile(ASSETS_PATH.append("assets.pak"));
+
+    auto file = pak.ReadFile(path);
+
+    auto imageIO         = SDL_IOFromMem(file.data(), file.size());
+    SDL_Surface* surface = IMG_Load_IO(imageIO, 1); // AUTO CLOSABLE
+
+#endif
 
     this->surfaces[path] = surface;
-
     return surface;
 }
 
@@ -153,6 +195,8 @@ SDL_Texture* ResourceManager::CreateFontTexture(const std::string& uid, const st
 
 /* BRIEF: this will load a file and return the content */
 std::string ResourceManager::LoadFromFile(const std::string& filename) {
+
+#if BUILD_SHIPPING == 0
     size_t filesize = 0;
     auto filePath   = this->GetAssetsPath().append(filename);
 
@@ -164,7 +208,6 @@ std::string ResourceManager::LoadFromFile(const std::string& filename) {
             LOG_ERROR("Failed to load file '%s': %s \n", filename.c_str(), SDL_GetError());
             return "";
         }
-        
     }
 
 
@@ -180,6 +223,14 @@ std::string ResourceManager::LoadFromFile(const std::string& filename) {
     SDL_free(data);
 
     return content;
+
+#else
+    Pak pak;
+    pak.LoadPakFile(ASSETS_PATH.append("assets.pak"));
+
+    return pak.ReadFile(filename);
+
+#endif
 }
 
 void ResourceManager::WriteToFile(const std::string& filename, const void* content, size_t size, EWriteMode mode) {
@@ -223,7 +274,8 @@ ResourceManager::~ResourceManager() {
 
     textures.clear();
 
-    for (auto& [key, music] : music) {
+    for (auto& [key, music] : musics) {
+        Mix_HaltMusic();
         Mix_FreeMusic(music);
     }
 

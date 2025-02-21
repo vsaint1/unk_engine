@@ -24,7 +24,7 @@
 #include <math.h>
 
 /* BRIEF: i couldnt manage to get this to work on emscripten, for now is disabled */
-#ifdef USE_ZLIB 0
+#ifdef UNK_USE_ZLIB 0
     #include <zlib.h>
 #endif
 

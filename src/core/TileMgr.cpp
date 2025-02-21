@@ -1,7 +1,7 @@
 #include "../public/core/TileMgr.h"
 
 /* zlib decompression, currently not using. need to fix emscripten port */
-#if USE_ZLIB
+#if UNK_USE_ZLIB
 std::vector<Uint32> Decode_Base64_zlib(const std::string& encoded, int size) {
     std::string decoded_base64 = decode_base64_and_inflate(encoded);
 

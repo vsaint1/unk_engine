@@ -1,15 +1,20 @@
 def buildAsLibrary = project.hasProperty('BUILD_AS_LIBRARY');
 def buildAsApplication = !buildAsLibrary
 
+var BUILD_SHIPPING = true
+
 if (buildAsApplication) {
     apply plugin: 'com.android.application'
-}
-else {
+} else {
     apply plugin: 'com.android.library'
 }
 
 android {
     compileSdkVersion 34
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     if (buildAsApplication) {
         namespace "com.unkengine.app.project_name"
@@ -32,16 +37,19 @@ android {
 
     buildTypes {
         debug {
+            BUILD_SHIPPING = false
             applicationIdSuffix ".debug"
             debuggable true
             externalNativeBuild {
-               cmake {
+                cmake {
 
-               }
+                }
             }
         }
         release {
+            BUILD_SHIPPING = true
             minifyEnabled false
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             externalNativeBuild {
                 cmake {
@@ -101,15 +109,33 @@ dependencies {
 
 tasks.register('copyDependencies') {
 
+    delete {
+        delete 'src/main/res/drawable/icon.png'
+        delete 'src/main/assets'
+    }
+
     copy {
         from '../../assets'
         into 'src/main/res/drawable'
         include 'icon.png'
     }
 
-    copy {
-        from '../../../assets'
-        into 'src/main/assets'
+    if (BUILD_SHIPPING) {
+
+        copy {
+            from('../../../assets') {
+                include 'assets.pak'
+            }
+            into 'src/main/assets'
+        }
+
+    } else {
+
+        copy {
+            from '../../../assets'
+            into 'src/main/assets'
+        }
+
     }
 }
 

@@ -125,51 +125,47 @@ void TiledMap::Awake() {
     }
 
     this->layers = layers;
-    
 }
 
 /* BRIEF: We render each layer (currently this is only for uniform sized tiles ex: (16x16,32x32))*/
 void TiledMap::Render(SDL_Renderer* renderer) {
+    if (layers.empty() || tilesets.empty()) {
+        return;
+    }
 
-    LOG_INFO("Layers: %d, TileSets: %d \n", layers.size(), tilesets.size());
     for (const auto& layer : layers) {
-        for (Uint32 y = 0; y < layer.GetHeight(); ++y) {
-            for (Uint32 x = 0; x < layer.GetWidth(); ++x) {
-                Uint32 tileID = layer.GetTiles()[y * layer.GetWidth() + x];
+        const auto& tiles = layer.GetTiles();
+        if (tiles.empty()) {
+            continue;
+        }
 
+        Uint32 layerWidth  = layer.GetWidth();
+        Uint32 layerHeight = layer.GetHeight();
+
+        for (Uint32 y = 0; y < layerHeight; ++y) {
+            for (Uint32 x = 0; x < layerWidth; ++x) {
+                Uint32 tileID = tiles[y * layerWidth + x];
                 if (tileID == 0) {
-                    continue; // Skip empty tiles (ID 0)
-                }
-
-                // Find the corresponding tileset
-                SDL_Texture* tilesetTexture = nullptr;
-                Uint32 localTileID          = 0;
-                Uint32 columns              = 0;
-
-                for (const auto& tileset : tilesets) {
-                    Uint32 endID = tileset.firstgid + (tileset.columns * tileset.tileCount) - 1;
-                    if (tileID >= tileset.firstgid && tileID <= endID) {
-                        tilesetTexture = tileset.texture;
-                        localTileID    = tileID - tileset.firstgid;
-                        columns        = tileset.columns;
-                        break; // Found the correct tileset, stop searching
-                    }
-                }
-
-                if (!tilesetTexture || columns == 0) {
                     continue;
                 }
 
-                Uint32 tileX = (localTileID % columns) * tileSize;
-                Uint32 tileY = (localTileID / columns) * tileSize;
+                for (const auto& tileset : tilesets) {
+                    if (tileID >= tileset.firstgid && tileID < tileset.firstgid + tileset.tileCount) {
+                        Uint32 localTileID = tileID - tileset.firstgid;
 
-                SDL_FRect srcRect = {static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileSize),
-                                     static_cast<float>(tileSize)};
+                        Uint32 tileX = (localTileID % tileset.columns) * tileSize;
+                        Uint32 tileY = (localTileID / tileset.columns) * tileSize;
 
-                SDL_FRect destRect = {static_cast<float>(x * tileSize), static_cast<float>(y * tileSize),
-                                      static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                        SDL_FRect srcRect = {static_cast<float>(tileX), static_cast<float>(tileY),
+                                             static_cast<float>(tileSize), static_cast<float>(tileSize)};
 
-                SDL_RenderTexture(renderer, tilesetTexture, &srcRect, &destRect);
+                        SDL_FRect destRect = {static_cast<float>(x * tileSize), static_cast<float>(y * tileSize),
+                                              static_cast<float>(tileSize), static_cast<float>(tileSize)};
+
+                        SDL_RenderTexture(renderer, tileset.texture, &srcRect, &destRect);
+                        break;
+                    }
+                }
             }
         }
     }

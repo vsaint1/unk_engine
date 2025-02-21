@@ -153,8 +153,19 @@ SDL_Texture* ResourceManager::CreateFontTexture(const std::string& uid, const st
 
 /* BRIEF: this will load a file and return the content */
 std::string ResourceManager::LoadFromFile(const std::string& filename) {
-    size_t filesize     = 0;
-    const auto filePath = this->GetAssetsPath().append(filename);
+    size_t filesize = 0;
+    auto filePath   = this->GetAssetsPath().append(filename);
+
+    if (filePath.empty()) {
+        LOG_WARN("Not found in assets, trying external storage");
+        filePath = this->GetExternalStorage().append(filename);
+
+        if (filePath.empty()) {
+            LOG_ERROR("Failed to load file '%s': %s \n", filename.c_str(), SDL_GetError());
+            return "";
+        }
+        
+    }
 
 
     // TODO: change this to SDL_LoadFile_IO
@@ -173,7 +184,7 @@ std::string ResourceManager::LoadFromFile(const std::string& filename) {
 
 void ResourceManager::WriteToFile(const std::string& filename, const void* content, size_t size, EWriteMode mode) {
 
-    auto filePath = this->GetAssetsPath().append(filename);
+    auto filePath = this->GetExternalStorage().append(filename);
 
     auto file = SDL_IOFromFile(filePath.c_str(), mode == OVERWRITE ? "wb" : "ab");
 

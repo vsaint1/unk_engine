@@ -15,7 +15,6 @@ struct GameContext {
 };
 
 
-
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 
@@ -27,20 +26,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     auto textFile = ResourceManager::GetInstance().LoadFromFile("test.txt");
     auto jsonFile = ResourceManager::GetInstance().LoadFromFile("test.json");
 
-    XMLDocument mapDoc;
-    auto mapFile = ResourceManager::GetInstance().LoadFromFile("map/overworld_map.xml");
+    TiledMap map("map/overworld_map.xml");
 
-    mapDoc.Parse(mapFile.c_str(), mapFile.length());
-
-
-    XMLPrinter printer;
-
-
-    mapDoc.Print(&printer);
-    LOG_INFO("XML: %s \n", printer.CStr());
-
-    TiledMap map("map/overworld_map_test.xml");
-    
     map.Awake();
 
     Json json      = Json::parse(jsonFile);
@@ -139,9 +126,14 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     GFrameManager->Update();
 
-    const auto gameStatus = GFrameManager->IsPaused() ? " - [Paused]" : " - [Running]";
-    std::string title     = "[UNK_ENGINE] - Window, " + GFrameManager->GetFpsText() + gameStatus;
-    SDL_SetWindowTitle(GEngine->GetWindow(), title.c_str());
+    const auto gameStatus = GFrameManager->IsPaused() ? "PAUSED" : "RUNNING";
+    std::string title     = "[UNK_ENGINE] - Window - FPS: " + GFrameManager->GetFpsText() + gameStatus;
+
+    char titleFmt[0x100];
+    SDL_snprintf(titleFmt, sizeof(titleFmt), "[%s:%s] - Window Sample, [FPS]: %.2f, [GameState]: %s ", ENGINE_NAME,
+                 ENGINE_VERSION_STR, GFrameManager->GetFps(), gameStatus);
+
+    SDL_SetWindowTitle(GEngine->GetWindow(), titleFmt);
 
     const float FREQUENCY = 2.f;
     float lerpFactor      = (std::sin(GFrameManager->GetElapsedTime() * FREQUENCY * M_PI) + 1.0f) * 0.5f;

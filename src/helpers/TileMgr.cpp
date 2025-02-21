@@ -1,6 +1,6 @@
 #include "../public/core/TileMgr.h"
 
-/* zlib decompression */
+/* zlib decompression, currently not using. need to fix emscripten port */
 #if USE_ZLIB
 std::vector<Uint32> Decode_Base64_zlib(const std::string& encoded, int size) {
     std::string decoded_base64 = decode_base64_and_inflate(encoded);
@@ -41,9 +41,18 @@ void TileLayer::DecodeTile(const std::string& encoded_data, int map_width, int m
 
 void TiledMap::Awake() {
     XMLDocument document;
-    auto file = ResourceManager::GetInstance().LoadFromFile(mapPath);
+    
+    auto content = ResourceManager::GetInstance().LoadFromFile(mapPath);
 
-    document.Parse(file.c_str(), file.length());
+    document.Parse(content.c_str(), content.length());
+
+#if _DEBUG
+    XMLPrinter printer;
+
+    document.Print(&printer);
+    LOG_INFO("Map %s, XML_Data: %s \n", this->mapPath.c_str(), printer.CStr());
+
+#endif
 
     XMLElement* mapElement = document.FirstChildElement("map");
 

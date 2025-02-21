@@ -151,6 +151,7 @@ SDL_Texture* ResourceManager::CreateFontTexture(const std::string& uid, const st
 }
 
 
+/* BRIEF: this will load a file and return the content */
 std::string ResourceManager::LoadFromFile(const std::string& filename) {
     size_t filesize     = 0;
     const auto filePath = this->GetAssetsPath().append(filename);

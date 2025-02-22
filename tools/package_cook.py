@@ -15,33 +15,29 @@ def package_assets(version="0.0.1", name="assets"):
 
     index = {}
 
-    print(f"[WARNING]: make sure to change the `source` field in the TILED exported to match tile_set path.")
+    print(f"[WARNING]: Make sure to change the `source` field in the TILED export to match the tile set path.")
     timer_start = time.time()
 
     with open(PAK_FILE, "wb") as pak:
-        pak.write(struct.pack("I", 1))  
+        
         pak.write(struct.pack("I", 0))  
 
         for root, _, files in os.walk(ASSETS_FOLDER):
             for file in files:
-                # if file == "assets.pak":
-                #     continue  
-
                 filepath = os.path.join(root, file)
                 relative_path = os.path.relpath(filepath, ASSETS_FOLDER)
 
                 with open(filepath, "rb") as f:
-                    file_size_mb = os.path.getsize(filepath) / 1000
-                    print(f"[INFO] - Cooking {relative_path}, size {file_size_mb:.2f} mb")	
+                    file_size_kb = os.path.getsize(filepath) / 1000
+                    print(f"[INFO] - Cooking {relative_path}, size {file_size_kb:.2f} KB")
                     data = f.read()
 
                 start = pak.tell()
                 pak.write(data)
-                end = pak.tell()
-                index[relative_path] = (start, end - start)
+                size = pak.tell() - start
+                index[relative_path] = (start, size)
 
         index_start = pak.tell()
-
         for path, (start, size) in index.items():
             path_encoded = path.encode("utf-8")
             pak.write(struct.pack("I", len(path_encoded)))
@@ -49,13 +45,11 @@ def package_assets(version="0.0.1", name="assets"):
             pak.write(struct.pack("II", start, size))
 
         index_size = pak.tell() - index_start
-        pak.seek(4)
+        pak.seek(0)
         pak.write(struct.pack("I", index_size))
 
     timer_end = time.time()
-    timer_ms = (timer_end - timer_start) * 1000
-
-    print(f"[INFO] - Cook completed, took {timer_ms:.2f} ms")
+    print(f"[INFO] - Cook completed in {(timer_end - timer_start) * 1000:.2f} ms")
 
 
 def extract_file(target_path, output_folder="extracted"):
@@ -65,9 +59,14 @@ def extract_file(target_path, output_folder="extracted"):
 
     with open(PAK_FILE, "rb") as pak:
         index_size = struct.unpack("I", pak.read(4))[0]
-        pak.seek(-index_size, 2)
+        if index_size == 0:
+            print(f"[ERROR] - Invalid or empty index.")
+            return None
 
-        while pak.tell() < pak.seek(0, 2):
+        pak.seek(-index_size, 2)
+        index_start = pak.tell()
+
+        while pak.tell() < index_start + index_size:
             path_len = struct.unpack("I", pak.read(4))[0]
             path = pak.read(path_len).decode("utf-8")
             start, size = struct.unpack("II", pak.read(8))
@@ -91,7 +90,7 @@ def extract_file(target_path, output_folder="extracted"):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("[INFO] -Usage: python pak_tool.py [package|extract <file_path>]")
+        print("[INFO] - Usage: python pak_tool.py [package|extract <file_path>]")
         sys.exit(1)
 
     command = sys.argv[1]

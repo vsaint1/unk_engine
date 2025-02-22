@@ -30,14 +30,11 @@ TTF_Font* ResourceManager::GetFont(const std::string& path, int size) {
 
     auto file = pak.ReadFile(path);
 
-
-    void* mem_buffer = SDL_malloc(file.size());
-    SDL_memcpy(mem_buffer, file.data(), file.size());
+    void* mem_buffer = Memory::GetInstance()->Alloc(file.data(),file.size());
 
     SDL_IOStream* mem_rw = SDL_IOFromConstMem(mem_buffer, file.size());
 
     TTF_Font* font = TTF_OpenFontIO(mem_rw, 1, size);
-
 
 #endif
 
@@ -69,8 +66,7 @@ Mix_Music* ResourceManager::GetMusic(const std::string& path) {
     pak.LoadPakFile(ASSETS_PATH.append("assets.pak"));
     auto file = pak.ReadFileToMemory(path);
 
-    void* mem_buffer = SDL_malloc(file.size());
-    SDL_memcpy(mem_buffer, file.data(), file.size());
+    void* mem_buffer = Memory::GetInstance()->Alloc(file.data(),file.size());
 
     SDL_IOStream* mem_rw = SDL_IOFromConstMem(mem_buffer, file.size());
 
@@ -280,4 +276,7 @@ ResourceManager::~ResourceManager() {
     }
 
     sounds.clear();
+
+    Memory::GetInstance()->Cleanup();
+
 }

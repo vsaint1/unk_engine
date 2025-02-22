@@ -7,6 +7,8 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE INTERNAL "")
 
 project(unk_engine)
 
+message("CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 99)
 
@@ -83,6 +85,7 @@ if(ANDROID)
     target_link_libraries(${PROJECT_NAME} PUBLIC android log GLESv2 m)
 
 endif()
+
 
 
 # ios/macosx
@@ -202,9 +205,27 @@ if(EMSCRIPTEN)
 
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+
+    message(STATUS "BUILD LINUX")
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
+
+    add_executable(${PROJECT_NAME} ${SOURCES})
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
+
+    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets)
+        
+endif()
+
 # WARNING: HERE WE LINK ALL DEPENDENCIES, `MUST BE CROSS-PLATFORM AND NOT PLATFORM SPECIFIC`
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/public)
+
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer SDL3_image::SDL3_image glm::glm) 
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)

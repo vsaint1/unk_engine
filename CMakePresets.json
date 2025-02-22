@@ -7,6 +7,18 @@
   },
   "configurePresets": [
     {
+      "name": "linux",
+      "displayName": "Linux - cmake",
+      "description": "Linux build with cmake",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/linux",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "Linux",
+        "BUILD_SHARED_LIBS": "ON",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
       "name": "mac",
       "displayName": "OSX [intel/arm] - xcode",
       "description": "MacOS build with xcode",
@@ -29,7 +41,6 @@
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
-
     {
       "name": "ios-simulator",
       "displayName": "iOS Simulator - xcode",
@@ -88,7 +99,9 @@
       "name": "macosx",
       "displayName": "MacOS",
       "description": "MacOS build with xcode",
-      "targets": ["unk_engine"],
+      "targets": [
+        "unk_engine"
+      ],
       "verbose": true,
       "configurePreset": "mac"
     },
@@ -96,7 +109,9 @@
       "name": "webgl-r",
       "displayName": "WebGL Release",
       "description": "WebGL build with emscripten",
-      "targets": ["unk_engine"],
+      "targets": [
+        "unk_engine"
+      ],
       "verbose": true,
       "configurePreset": "web"
     },
@@ -104,7 +119,9 @@
       "name": "windows-d",
       "displayName": "Windows x64 Debug",
       "description": "Windows x64 build MSVC",
-      "targets": ["unk_engine"],
+      "targets": [
+        "unk_engine"
+      ],
       "verbose": true,
       "configurePreset": "debug-windows"
     },
@@ -112,9 +129,21 @@
       "name": "windows-r",
       "displayName": "Windows x64 Release",
       "description": "Windows x64 build MSVC",
-      "targets": ["unk_engine"],
+      "targets": [
+        "unk_engine"
+      ],
       "verbose": true,
       "configurePreset": "rel-windows"
+    },
+    {
+      "name": "linux-d",
+      "displayName": "Linux Debug",
+      "description": "Linux build with cmake",
+      "targets": [
+        "unk_engine"
+      ],
+      "verbose": true,
+      "configurePreset": "linux"
     }
   ]
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine.h"
 #include "helpers/PakLoader.h"
-#include <SDL3_mixer/SDL_mixer.h>
+#include "helpers/Memory.h"
 
 enum EScaleMode { LINEAR = 0, NEAREST };
 

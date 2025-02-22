@@ -23,8 +23,8 @@ if `BUILD_SHIPPING` is False the engine will be in development mode and enable t
 
 - [ ] ImGui (TODO) 
 - [ ] Logging (TODO)
-- [ ] Loading asset files from `assets` folder and not from .pak files (TODO)
+- [x] Loading asset files from `assets` folder and not from .pak files [WASM does not support this]
 
 */
 
-#define BUILD_SHIPPING 0
+#define BUILD_SHIPPING 1

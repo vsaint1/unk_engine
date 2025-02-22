@@ -8,19 +8,30 @@ std::string Pak::NormalizePath(const std::string& path) const {
 }
 
 bool Pak::LoadPakFile(const std::string& pakFilePath) {
-    size_t filesize;
-    void* data = SDL_LoadFile(pakFilePath.c_str(), &filesize);
-
-    if (!data) {
-        LOG_ERROR("Failed to load PAK file.");
+    SDL_IOStream* rw = SDL_IOFromFile(pakFilePath.c_str(), "rb");
+    if (!rw) {
+        LOG_ERROR("Failed to open PAK file: %s", SDL_GetError());
         return false;
     }
 
-    pakData.assign(static_cast<char*>(data), static_cast<char*>(data) + filesize);
-    SDL_free(data);
+    Sint64 filesize = SDL_GetIOSize(rw);
+    if (filesize <= 0) {
+        LOG_ERROR("Invalid PAK file size.");
+        SDL_CloseIO(rw);
+        return false;
+    }
+
+    pakData.resize(filesize);
+    if (SDL_ReadIO(rw, pakData.data(), filesize) != filesize) {
+        LOG_ERROR("Failed to read PAK file.");
+        SDL_CloseIO(rw);
+        return false;
+    }
+
+    SDL_CloseIO(rw);
 
     if (pakData.size() < 8) {
-        LOG_ERROR("Invalid PAK file.");
+        LOG_ERROR("Invalid PAK file format.");
         return false;
     }
 
@@ -38,7 +49,7 @@ bool Pak::LoadPakFile(const std::string& pakFilePath) {
         std::string path(&pakData[offset], pathLen);
         offset += pathLen;
 
-        path = NormalizePath(path);
+        path = NormalizePath(path);  
 
         CFileEntry entry;
         std::memcpy(&entry.start, &pakData[offset], sizeof(uint32_t));

@@ -37,7 +37,7 @@ android {
 
     buildTypes {
         debug {
-            BUILD_SHIPPING = false
+            BUILD_SHIPPING = true
             applicationIdSuffix ".debug"
             debuggable true
             externalNativeBuild {

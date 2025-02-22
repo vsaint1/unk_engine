@@ -16,8 +16,8 @@ class ResourceManager {
     std::unordered_map<std::string, SDL_Texture*> textures;
 
     std::unordered_map<std::string,TTF_Font*> fonts;
+    
     std::unordered_map<std::string,Mix_Music*> musics;
-    std::unordered_map<std::string, Mix_Chunk*> sounds;
 
 public:
     static ResourceManager& GetInstance();

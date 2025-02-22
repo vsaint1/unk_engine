@@ -275,7 +275,7 @@ ResourceManager::~ResourceManager() {
         Mix_FreeMusic(music);
     }
 
-    sounds.clear();
+    musics.clear();
 
     Memory::GetInstance()->Cleanup();
 

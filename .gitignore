@@ -5,3 +5,5 @@ build/
 .vscode/
 
 *.pak
+
+*.Identifier

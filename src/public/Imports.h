@@ -36,6 +36,7 @@
 #define GLES 0
 #endif
 
+
 using Json = nlohmann::json; // Simplify access to JSON
 
 using namespace tinyxml2; // Simplify access to XML

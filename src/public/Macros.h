@@ -27,4 +27,4 @@ if `BUILD_SHIPPING` is False the engine will be in development mode and enable t
 
 */
 
-#define BUILD_SHIPPING 1
+#define BUILD_SHIPPING 0

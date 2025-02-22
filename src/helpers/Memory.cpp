@@ -6,22 +6,17 @@ void* Memory::Alloc(void* data, size_t size) {
         return nullptr;
     }
 
-    CAllocator* allocator = (CAllocator*) SDL_malloc(sizeof(CAllocator));
+    CAllocator* allocator = (CAllocator*)SDL_malloc(sizeof(CAllocator) + size);
     if (!allocator) {
         LOG_ERROR("Failed to allocate memory for CAllocator.");
         return nullptr;
     }
 
-    allocator->allocation = SDL_malloc(size);
-    if (!allocator->allocation) {
-        LOG_ERROR("Failed to allocate memory for data.");
-        SDL_free(allocator);
-        return nullptr;
-    }
-
+    allocator->allocation = (void*)(allocator + 1);  
     SDL_memcpy(allocator->allocation, data, size);
+
     allocator->next = head;
-    head            = allocator;
+    head = allocator;
 
     return allocator->allocation;
 }
@@ -31,6 +26,11 @@ void Memory::Cleanup() {
 
     while (head) {
         auto* next = head->next;
+
+        if (head->allocation) {
+            SDL_free(head->allocation);  
+        }
+
         SDL_free(head);
         head = next;
     }

@@ -3,7 +3,6 @@
 #include "public/core/Timer.h"
 #include <SDL3/SDL_main.h> /* WARNING: This must be included only once! */
 
-
 /* JUST FOR DEVELOPMENT AND EXAMPLE */
 struct GameContext {
     SDL_Texture* messageTex;
@@ -13,7 +12,6 @@ struct GameContext {
     Mix_Music* music;
     TiledMap map;
 };
-
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
@@ -60,16 +58,17 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     SDL_Texture* hello =
         ResourceManager::GetInstance().CreateFontTexture("intro_message", "Hello world", mineFont, {255, 255, 255});
 
+
     LOG_INFO("Content %s\n", textFile.c_str());
 
     auto gpuDriver = SDL_GetGPUDriver(0);
     SDL_ShowWindow(GEngine->GetWindow());
     {
-        LOG_INFO("Working flawlessly in %s \n", SDL_GetPlatform());
-        LOG_INFO("Version %d \n", SDL_GetVersion());
-        LOG_INFO("Video %s \n", SDL_GetVideoDriver(0));
-        LOG_INFO("GPU driver %s \n", SDL_GetGPUDriver(0));
-        LOG_INFO("RAM available %d \n", SDL_GetSystemRAM());
+        LOG_INFO("Working flawlessly in %s ", SDL_GetPlatform());
+        LOG_INFO("Version %d ", SDL_GetVersion());
+        LOG_INFO("Video %s ", SDL_GetVideoDriver(0));
+        LOG_INFO("GPU driver %s ", SDL_GetGPUDriver(0));
+        LOG_INFO("RAM available %d ", SDL_GetSystemRAM());
 
         int width, height, bbwidth, bbheight;
         SDL_GetWindowSize(GEngine->GetWindow(), &width, &height);
@@ -77,7 +76,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         LOG_INFO("Window size: %ix%i \n", width, height);
         LOG_INFO("Backbuffer size: %ix%i \n", bbwidth, bbheight);
         if (width != bbwidth) {
-            LOG_INFO("This is a highdpi environment. \n");
+            LOG_INFO("This is a highdpi environment. ");
         }
     }
 
@@ -103,13 +102,14 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         GEngine->engineState = SDL_APP_SUCCESS;
     }
 
+
     if (event->type == SDL_EVENT_KEY_DOWN && event->key.scancode == SDL_SCANCODE_P) {
 
         if (GFrameManager->IsPaused()) {
-            LOG_INFO("Resuming \n");
+            LOG_INFO("Resuming ");
             GFrameManager->Resume();
         } else {
-            LOG_INFO("Pausing \n");
+            LOG_INFO("Pausing ");
 
             GFrameManager->Pause();
         }
@@ -118,12 +118,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     return GEngine->engineState;
 }
 
+
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* app = (GameContext*) appstate;
 
-
     GFrameManager->Update();
 
+    
     const auto gameStatus = GFrameManager->IsPaused() ? "PAUSED" : "RUNNING";
     std::string title     = "[UNK_ENGINE] - Window - FPS: " + GFrameManager->GetFpsText() + gameStatus;
 
@@ -143,19 +144,18 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     SDL_SetRenderDrawColor(GEngine->GetRenderer(), 0, 0, 0, SDL_ALPHA_OPAQUE);
 
     SDL_RenderClear(GEngine->GetRenderer());
-
     SDL_SetTextureColorMod(app->imageTex, red, green, blue);
     SDL_SetTextureScaleMode(app->imageTex, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
 
-    // WARNING: order matters!!!
 
+    // WARNING: order matters!!!
     app->map.Render(GEngine->GetRenderer());
 
     SDL_RenderTexture(GEngine->GetRenderer(), app->messageTex, NULL, &app->messageDest);
     SDL_RenderTexture(GEngine->GetRenderer(), app->imageTex, NULL, &app->imageDest);
 
     // 320x180 |  640x360 | 1280x720 -> 13:9 |  16:9 |  4:3
-    SDL_SetRenderLogicalPresentation(GEngine->GetRenderer(), 320, 180, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    // SDL_SetRenderLogicalPresentation(GEngine->GetRenderer(), 320, 180, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     SDL_RenderPresent(GEngine->GetRenderer());
 

@@ -155,7 +155,7 @@ SDL_Texture* ResourceManager::CreateFontTexture(const std::string& uid, const st
         surface = TTF_RenderText_Blended(font, text.c_str(), text.length(), color);
         break;
     default:
-        LOG_CRITICAL("Unknown text render mode %d", mode);
+        LOG_CRITICAL("Unknown render_mode Selected, check the ETextRenderMode enum");
         return nullptr;
     }
 
@@ -229,14 +229,14 @@ std::string ResourceManager::LoadFromFile(const std::string& filename) {
 #endif
 }
 
-void ResourceManager::WriteToFile(const std::string& filename, const void* content, size_t size, EWriteMode mode) {
+void ResourceManager::WriteToFile(const std::string& filename,  const void* content, size_t size, EWriteMode mode,const std::string& folder ) {
 
-    auto filePath = this->GetExternalStorage().append(filename);
+    auto filePath = this->GetExternalStorage(folder.c_str()).append(filename);
 
     auto file = SDL_IOFromFile(filePath.c_str(), mode == OVERWRITE ? "wb" : "ab");
 
     if (!file) {
-        LOG_ERROR("Failed to open file '%s': %s\n", filename.c_str(), SDL_GetError());
+        LOG_ERROR("Failed to open file '%s': %s ", filename.c_str(), SDL_GetError());
         return;
     }
 
@@ -246,6 +246,7 @@ void ResourceManager::WriteToFile(const std::string& filename, const void* conte
         LOG_ERROR("Failed to write entire content to file '%s': %s\n", filename.c_str(), SDL_GetError());
     }
 
+    LOG_INFO("Saved file at %s, with size %lu", filePath.c_str(), size);
     SDL_CloseIO(file);
 }
 
@@ -254,6 +255,7 @@ ResourceManager::~ResourceManager() {
 
     for (auto& [key, font] : fonts) {
         TTF_CloseFont(font);
+        
     }
 
     fonts.clear();
@@ -275,8 +277,8 @@ ResourceManager::~ResourceManager() {
         Mix_FreeMusic(music);
     }
 
-    musics.clear();
-
     Memory::GetInstance()->Cleanup();
+
+    musics.clear();
 
 }

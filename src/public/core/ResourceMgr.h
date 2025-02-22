@@ -39,7 +39,7 @@ public:
 
     std::string LoadFromFile(const std::string& filename);
 
-    void WriteToFile(const std::string& filename, const void* content, size_t size, EWriteMode mode = OVERWRITE);
+    void WriteToFile(const std::string& filename, const void* content, size_t size, EWriteMode mode = OVERWRITE,const std::string& folder = "unk_default");
 
     std::string GetExternalStorage(const char* folder = "default") {
         auto prefStorage = SDL_GetPrefPath(ENGINE_NAME, folder);

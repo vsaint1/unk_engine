@@ -170,5 +170,6 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
         delete app;
     }
 
+
     GEngine->Cleanup();
 }

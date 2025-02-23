@@ -32194,13 +32194,13 @@ inline void init(flecs::world& world) {
     world.component<u8_t>("flecs::meta::u8");
     world.component<u16_t>("flecs::meta::u16");
     world.component<u32_t>("flecs::meta::u32");
-//    world.component<u64_t>("flecs::meta::u64");
+    world.component<u64_t>("flecs::meta::u64");
     world.component<i8_t>("flecs::meta::i8");
     world.component<i16_t>("flecs::meta::i16");
     world.component<i32_t>("flecs::meta::i32");
-//    world.component<i64_t>("flecs::meta::i64");
+    world.component<i64_t>("flecs::meta::i64");
     world.component<f32_t>("flecs::meta::f32");
-//    world.component<f64_t>("flecs::meta::f64");
+    world.component<f64_t>("flecs::meta::f64");
 
     world.component<type_kind_t>("flecs::meta::type_kind");
     world.component<primitive_kind_t>("flecs::meta::primitive_kind");
@@ -33164,24 +33164,24 @@ namespace flecs
 {
 
 inline void world::init_builtin_components() {
-    //this->component<Component>();
-    //this->component<Identifier>();
-    //this->component<Poly>();
+    this->component<Component>();
+    this->component<Identifier>();
+    this->component<Poly>();
 
 #   ifdef FLECS_SYSTEM
-    //_::system_init(*this);
+    _::system_init(*this);
 #   endif
 #   ifdef FLECS_TIMER
-    //_::timer_init(*this);
+    _::timer_init(*this);
 #   endif
 #   ifdef FLECS_DOC
-    //doc::_::init(*this);
+    doc::_::init(*this);
 #   endif
 #   ifdef FLECS_REST
-    //rest::_::init(*this);
+    rest::_::init(*this);
 #   endif
 #   ifdef FLECS_META
-    //meta::_::init(*this);
+    meta::_::init(*this);
 #   endif
 }
 

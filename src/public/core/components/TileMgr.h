@@ -68,7 +68,7 @@ struct Tileset {
 };
 
 /* WARNING: ONCE EXPORTED BY TILED CHANGE THE IMAGE `SOURCE` ON THE XML FILE */
-class TiledMap {
+class TiledMap : public GameObject {
 public:
     std::vector<TileLayer> layers;
     std::vector<Tileset> tilesets;
@@ -89,20 +89,20 @@ public:
         this->cameraBounds = boundary;
     }
 
-    void Awake();
+    void Awake() override;
 
-    void Start() {
+    void Start() override {
         LOG_INFO("Starting TiledMap");
     }
 
-    void Update(float delta_time)  {}
+    void Update(float delta_time) override {}
 
-    void Render(SDL_Renderer* renderer) ;
+    void Render(SDL_Renderer* renderer) override;
     
-    void ProcessEvent(SDL_Event* event)  {
+    void ProcessEvent(SDL_Event* event) override  {
     }
 
-    void Destroy() {
+    void Destroy() override {
         LOG_INFO("TiledMap Destroying");
     }
 

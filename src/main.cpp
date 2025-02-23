@@ -127,7 +127,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     LOG_QUIT_ON_FAIL(music);
 
-     //Mix_PlayMusic(music, 0); // once
+    Mix_PlayMusic(music, 0); // once
     auto vec = glm::vec3(1, 1, 1);
 
     LOG_INFO("glm_vec %f %f %f \n", vec.x, vec.y, vec.z);

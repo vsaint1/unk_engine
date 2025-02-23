@@ -186,6 +186,7 @@ endif()
 
 # WASM [emscripten]
 if(EMSCRIPTEN)
+    set(PROJECT_NAME "index")
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     add_executable(${PROJECT_NAME} ${SOURCES})
 
@@ -196,7 +197,7 @@ if(EMSCRIPTEN)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
 
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s STACK_SIZE=131072 -s ALLOW_MEMORY_GROWTH=1 --preload-file ${CMAKE_SOURCE_DIR}/assets@/assets")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s STACK_SIZE=20MB -s ALLOW_MEMORY_GROWTH=1 --preload-file ${CMAKE_SOURCE_DIR}/assets@/assets")
 
     # TODO: copy assets
     # add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD

@@ -1,7 +1,15 @@
 #pragma once
 #include "helpers/Logging.h"
 
+#define FLECS_CUSTOM_BUILD 
+#define FLECS_LOG
 #define FLECS_SOFT_ASSERT
+#define FLECS_PIPELINE
+#define FLECS_CPP
+#define FLECS_QUERY_DSL
+#define FLECS_JSON
+#define FLECS_SYSTEM
+
 #include "components/flecs.h"
 
 /* BRIEF: Base class for all objects */

@@ -30,7 +30,7 @@ TTF_Font* ResourceManager::GetFont(const std::string& path, int size) {
 
     auto file = pak.ReadFile(path);
 
-    void* mem_buffer = Memory::GetInstance()->Alloc(file.data(),file.size());
+    void* mem_buffer = Memory::GetInstance()->Alloc(file.data(), file.size());
 
     SDL_IOStream* mem_rw = SDL_IOFromConstMem(mem_buffer, file.size());
 
@@ -66,7 +66,7 @@ Mix_Music* ResourceManager::GetMusic(const std::string& path) {
     pak.LoadPakFile(ASSETS_PATH.append("assets.pak"));
     auto file = pak.ReadFileToMemory(path);
 
-    void* mem_buffer = Memory::GetInstance()->Alloc(file.data(),file.size());
+    void* mem_buffer = Memory::GetInstance()->Alloc(file.data(), file.size());
 
     SDL_IOStream* mem_rw = SDL_IOFromConstMem(mem_buffer, file.size());
 
@@ -125,6 +125,8 @@ SDL_Texture* ResourceManager::GetTexture(const std::string& path) {
             LOG_ERROR("Failed to create texture from '%s': %s", path.c_str(), SDL_GetError());
             return nullptr;
         }
+
+        SDL_SetTextureScaleMode(texture, engine::bEnableScaleModeNearest  ? SDL_SCALEMODE_NEAREST : SDL_SCALEMODE_LINEAR);
 
         this->textures[path] = texture;
     }
@@ -229,7 +231,8 @@ std::string ResourceManager::LoadFromFile(const std::string& filename) {
 #endif
 }
 
-void ResourceManager::WriteToFile(const std::string& filename,  const void* content, size_t size, EWriteMode mode,const std::string& folder ) {
+void ResourceManager::WriteToFile(const std::string& filename, const void* content, size_t size, EWriteMode mode,
+                                  const std::string& folder) {
 
     auto filePath = this->GetExternalStorage(folder.c_str()).append(filename);
 
@@ -255,7 +258,6 @@ ResourceManager::~ResourceManager() {
 
     for (auto& [key, font] : fonts) {
         TTF_CloseFont(font);
-        
     }
 
     fonts.clear();
@@ -280,5 +282,4 @@ ResourceManager::~ResourceManager() {
     Memory::GetInstance()->Cleanup();
 
     musics.clear();
-
 }

@@ -21,10 +21,21 @@ BRIEF: This WILL `Enable` or `Disable` many features of the engine
 
 if `BUILD_SHIPPING` is False the engine will be in development mode and enable the following features
 
-- [ ] ImGui (TODO) 
+- [ ] ImGui (TODO)
 - [ ] Logging (TODO)
 - [x] Loading asset files from `assets` folder and not from .pak files [WASM does not support this]
 
 */
 
 #define BUILD_SHIPPING 0
+
+
+// TODO: just for development
+
+namespace engine {
+	
+	static bool bEnableRenderDebug = true;
+
+	static bool bEnableScaleModeNearest = true;
+
+}

@@ -1,31 +1,113 @@
 #include "public/core/Engine.h"
-#include "public/core/TileMgr.h"
 #include "public/core/Timer.h"
+#include "public/core/components/Camera.h"
+#include "public/core/components/Sprite.h"
+#include "public/core/components/TileMgr.h"
+#include "public/core/components/Transform.h"
 #include <SDL3/SDL_main.h> /* WARNING: This must be included only once! */
 
 /* JUST FOR DEVELOPMENT AND EXAMPLE */
 struct GameContext {
     SDL_Texture* messageTex;
-    SDL_Texture* imageTex;
     SDL_FRect messageDest;
-    SDL_FRect imageDest;
     Mix_Music* music;
-    TiledMap map;
+    flecs::world world;
 };
+
+enum EEntityType { NONE = 0, PLAYER, CREATURE, ENEMY };
+
+// TODO: refactor
+struct Entity {
+    std::string name = "unk";
+    float health     = 0;
+    float maxHealth  = 0;
+    EEntityType type = NONE;
+};
+
+// TODO: refactor
+void HandlePlayerInput(Transform* playerTransform, float speed, float deltaTime) {
+    auto state = SDL_GetKeyboardState(NULL);
+
+    auto pos = playerTransform->GetPosition();
+
+    if (state[SDL_SCANCODE_W]) {
+        pos.y -= speed * deltaTime;
+    }
+    if (state[SDL_SCANCODE_S]) {
+        pos.y += speed * deltaTime;
+    }
+    if (state[SDL_SCANCODE_A]) {
+        pos.x -= speed * deltaTime;
+    }
+    if (state[SDL_SCANCODE_D]) {
+        pos.x += speed * deltaTime;
+    }
+
+    playerTransform->SetPosition({pos.x, pos.y, 0.0f});
+}
+
+// TODO: refactor
+void RenderHealthBar(SDL_Renderer* renderer, Transform* transform, Entity* entity) {
+    const int barWidth  = 32;
+    const int barHeight = 4;
+    int healthWidth     = static_cast<int>((entity->health / entity->maxHealth) * barWidth);
+
+    SDL_FRect background = {transform->GetPosition().x, transform->GetPosition().y - 2, barWidth, barHeight};
+    SDL_FRect healthBar  = {transform->GetPosition().x, transform->GetPosition().y - 2, (float) healthWidth, barHeight};
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
+    SDL_RenderFillRect(renderer, &background);
+
+    SDL_SetRenderDrawColor(renderer, 0, 150, 0, 200);
+    SDL_RenderFillRect(renderer, &healthBar);
+}
+
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 
     /* This will fail and not continue if SDL_Init/CreateWindow fails */
-    GEngine->Initialize("[UNK_ENGINE] - Window", {1280, 720},
-                        SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL, false);
+    GEngine->Initialize("[UNK_ENGINE] - Window", {1280, 720}, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL, false);
+
+
+    int width, height, bbwidth, bbheight;
+    SDL_GetWindowSize(GEngine->GetWindow(), &width, &height);
+    SDL_GetWindowSizeInPixels(GEngine->GetWindow(), &bbwidth, &bbheight);
+
+    SDL_ShowWindow(GEngine->GetWindow());
 
     auto textFile = ResourceManager::GetInstance().LoadFromFile("test.txt");
     auto jsonFile = ResourceManager::GetInstance().LoadFromFile("test.json");
 
-    TiledMap map("map/overworld_map_test_obj.xml");
+    SDL_Texture* image = ResourceManager::GetInstance().GetTexture("images/dragon.png");
 
-    map.Awake();
+    SDL_Texture* player = ResourceManager::GetInstance().GetTexture("images/player.png");
+
+    flecs::world GWorld;
+    
+    LOG_INFO("initialized flecs");
+    flecs::entity starter_scene = GWorld.entity("start_scene")
+                                      .set<TiledMap>({"map/overworld_map_test_obj.xml"});
+
+    flecs::entity dragon = GWorld.entity("enemy_dragon")
+                               .set<Transform>({{10, 20, 0}, {0, 0, 0}, {1, 1}})
+                               .set<Sprite>({image, {32, 32}, {0, 0}, {32, 32}})
+                               .set<Entity>({"Valakas", 100, 1000, EEntityType::ENEMY})
+                               .child_of(starter_scene);
+
+    GWorld.entity("player")
+        .set<Transform>({{40, 50, 0}, {0, 0, 0}, {1, 1}})
+        .set<Sprite>({player, {16, 16}, {10, 10}, {16, 16}})
+        .set<Entity>({"Player", 100, 100, EEntityType::PLAYER})
+        .child_of(starter_scene);
+
+    GWorld.each([&](flecs::entity e, TiledMap& map) {
+        map.Awake();
+
+        map.Start();
+
+    });
+
 
     Json json      = Json::parse(jsonFile);
     json["player"] = "John Doe";
@@ -36,6 +118,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     LOG_INFO("JSON: %s \n", json.dump(4).c_str());
 
+
     auto mineFont = ResourceManager::GetInstance().GetFont("fonts/Minecraft.ttf", 32);
 
     LOG_QUIT_ON_FAIL(mineFont);
@@ -44,51 +127,37 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     LOG_QUIT_ON_FAIL(music);
 
-    Mix_PlayMusic(music, 0); // once
+     //Mix_PlayMusic(music, 0); // once
     auto vec = glm::vec3(1, 1, 1);
 
     LOG_INFO("glm_vec %f %f %f \n", vec.x, vec.y, vec.z);
 
 
-    SDL_Texture* image = ResourceManager::GetInstance().GetTexture("images/dragon.png");
-
     SDL_Texture* message =
         ResourceManager::GetInstance().CreateFontTexture("message", textFile, mineFont, {255, 255, 255});
 
-    SDL_Texture* hello =
-        ResourceManager::GetInstance().CreateFontTexture("intro_message", "Hello world", mineFont, {255, 255, 255});
+    SDL_Texture* hello = ResourceManager::GetInstance().CreateFontTexture(
+        "intro_message", "the quick brown fox jumps over the lazy dog.", mineFont, {255, 255, 255});
 
 
-    LOG_INFO("Content %s\n", textFile.c_str());
+    LOG_INFO("Content %s ", textFile.c_str());
 
-    auto gpuDriver = SDL_GetGPUDriver(0);
-    SDL_ShowWindow(GEngine->GetWindow());
-    {
-        LOG_INFO("Working flawlessly in %s ", SDL_GetPlatform());
-        LOG_INFO("Version %d ", SDL_GetVersion());
-        LOG_INFO("Video %s ", SDL_GetVideoDriver(0));
-        LOG_INFO("GPU driver %s ", SDL_GetGPUDriver(0));
-        LOG_INFO("RAM available %d ", SDL_GetSystemRAM());
-
-        int width, height, bbwidth, bbheight;
-        SDL_GetWindowSize(GEngine->GetWindow(), &width, &height);
-        SDL_GetWindowSizeInPixels(GEngine->GetWindow(), &bbwidth, &bbheight);
-        LOG_INFO("Window size: %ix%i \n", width, height);
-        LOG_INFO("Backbuffer size: %ix%i \n", bbwidth, bbheight);
-        if (width != bbwidth) {
-            LOG_INFO("This is a highdpi environment. ");
-        }
-    }
+    LOG_INFO("Working flawlessly in %s ", SDL_GetPlatform());
+    LOG_INFO("Version %d ", SDL_GetVersion());
+    LOG_INFO("Video %s ", SDL_GetVideoDriver(0));
+    LOG_INFO("GPU driver %s ", SDL_GetGPUDriver(0));
+    LOG_INFO("RAM available %d ", SDL_GetSystemRAM());
+    LOG_INFO("Screen Size %d %d ", width, height);
 
 
-    SDL_FRect messageRect = {10, 500, message->w, message->h};
+    SDL_FRect messageRect = {5, 5, message->w, message->h};
 
-    SDL_FRect imageRect = {50, 200, 256, 256};
+    SDL_FRect imageRect = {10, 10, 32, 32};
 
-    *appstate = new GameContext{
+    *appstate = new GameContext {
 
-        .messageTex = message, .imageTex = image, .messageDest = messageRect, .imageDest = imageRect, .map = map
-
+        .messageTex = message, .messageDest = messageRect, .music = music, 
+        .world = GWorld
     };
 
 
@@ -97,6 +166,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     auto* app = (GameContext*) appstate;
+
 
     if (event->type == SDL_EVENT_QUIT) {
         GEngine->engineState = SDL_APP_SUCCESS;
@@ -118,13 +188,14 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     return GEngine->engineState;
 }
 
-
+// WARNING: renderer order matter
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* app = (GameContext*) appstate;
 
+
     GFrameManager->Update();
 
-    
+
     const auto gameStatus = GFrameManager->IsPaused() ? "PAUSED" : "RUNNING";
     std::string title     = "[UNK_ENGINE] - Window - FPS: " + GFrameManager->GetFpsText() + gameStatus;
 
@@ -134,38 +205,65 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     SDL_SetWindowTitle(GEngine->GetWindow(), titleFmt);
 
-    const float FREQUENCY = 2.f;
-    float lerpFactor      = (std::sin(GFrameManager->GetElapsedTime() * FREQUENCY * M_PI) + 1.0f) * 0.5f;
-
-    auto red   = 150 * (1 - lerpFactor) + 255 * lerpFactor;
-    auto green = 255 * (1 - lerpFactor) + 255 * lerpFactor;
-    auto blue  = 255 * (1 - lerpFactor) + 255 * lerpFactor;
 
     SDL_SetRenderDrawColor(GEngine->GetRenderer(), 0, 0, 0, SDL_ALPHA_OPAQUE);
 
     SDL_RenderClear(GEngine->GetRenderer());
-    SDL_SetTextureColorMod(app->imageTex, red, green, blue);
-    SDL_SetTextureScaleMode(app->imageTex, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
 
 
-    // WARNING: order matters!!!
-    app->map.Render(GEngine->GetRenderer());
+    app->world.each([&](flecs::entity e, TiledMap& map) {
+        map.Render(GEngine->GetRenderer());
 
-    SDL_RenderTexture(GEngine->GetRenderer(), app->messageTex, NULL, &app->messageDest);
-    SDL_RenderTexture(GEngine->GetRenderer(), app->imageTex, NULL, &app->imageDest);
+        e.children([&](flecs::entity child) {
+            if (child.has<Entity>() && child.has<Sprite>() && child.has<Transform>()) {
+                auto entity    = child.get_mut<Entity>();
+                auto sprite    = child.get_mut<Sprite>();
+                auto transform = child.get_mut<Transform>();
 
-    // 320x180 |  640x360 | 1280x720 -> 13:9 |  16:9 |  4:3
-    // SDL_SetRenderLogicalPresentation(GEngine->GetRenderer(), 320, 180, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+                sprite->SetPosition(transform->GetPosition());
+
+                if (entity->type == EEntityType::PLAYER) {
+
+                    HandlePlayerInput(transform, 20, GFrameManager->GetDeltaTime());
+                }
+
+                if (entity->type == EEntityType::ENEMY) {
+                    const float FREQUENCY = 2.f;
+                    float lerpFactor = (std::sin(GFrameManager->GetElapsedTime() * FREQUENCY * M_PI) + 1.0f) * 0.5f;
+
+                    auto red   = 150 * (1 - lerpFactor) + 255 * lerpFactor;
+                    auto green = 255 * (1 - lerpFactor) + 255 * lerpFactor;
+                    auto blue  = 255 * (1 - lerpFactor) + 255 * lerpFactor;
+
+                    sprite->SetColor(red, green, blue);
+
+                    RenderHealthBar(GEngine->GetRenderer(), transform, entity);
+                }
+
+                sprite->Render(GEngine->GetRenderer());
+            }
+        });
+    });
+
+    // SDL_RenderTexture(GEngine->GetRenderer(), app->messageTex, NULL, &app->messageDest);
+
+
+    SDL_SetRenderLogicalPresentation(GEngine->GetRenderer(), 320, 180, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    app->world.progress();
 
     SDL_RenderPresent(GEngine->GetRenderer());
 
-    GFrameManager->FixedFrameRate(60);
+    GFrameManager->FixedFrameRate(1);
 
     return GEngine->engineState;
 }
 
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
     auto* app = (GameContext*) appstate;
+
+
     if (app) {
         delete app;
     }

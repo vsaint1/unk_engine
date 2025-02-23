@@ -38,7 +38,7 @@ if(MSVC)
 endif()
 
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c")
 
 add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
 
@@ -196,7 +196,7 @@ if(EMSCRIPTEN)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-narrowing")
 
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --embed-file ${CMAKE_SOURCE_DIR}/assets@/assets")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s STACK_SIZE=131072 -s ALLOW_MEMORY_GROWTH=1 --preload-file ${CMAKE_SOURCE_DIR}/assets@/assets")
 
     # TODO: copy assets
     # add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD

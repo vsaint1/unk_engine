@@ -1,7 +1,7 @@
 def buildAsLibrary = project.hasProperty('BUILD_AS_LIBRARY');
 def buildAsApplication = !buildAsLibrary
 
-var BUILD_SHIPPING = true
+var BUILD_SHIPPING = false
 
 if (buildAsApplication) {
     apply plugin: 'com.android.application'
@@ -37,7 +37,6 @@ android {
 
     buildTypes {
         debug {
-            BUILD_SHIPPING = true
             applicationIdSuffix ".debug"
             debuggable true
             externalNativeBuild {
@@ -47,7 +46,6 @@ android {
             }
         }
         release {
-            BUILD_SHIPPING = true
             minifyEnabled false
             debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

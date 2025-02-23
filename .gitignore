@@ -7,3 +7,5 @@ build/
 *.pak
 
 *.Identifier
+
+.vs/
